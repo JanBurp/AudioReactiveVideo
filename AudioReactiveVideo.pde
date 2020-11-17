@@ -49,7 +49,7 @@ float textFadeTime = 1000.0;
 */
 public void setup() {
   size(1280,720);
-  background(255);
+  background(0);
   frameRate(movieFPS);
 
   padding = width/20;
@@ -94,10 +94,10 @@ public void infoText() {
   textSize(20);
   textAlign(LEFT);
   text(textLeft, padding, H-padding);
-  fill(110,110,110,textOpacity);
+  fill(255,255,255,textOpacity);
   textAlign(RIGHT);
   text(textRight, width-padding, H-padding);
-  fill(110,110,110,textOpacity);
+  fill(255,255,255,textOpacity);
 }
 
 /*
@@ -106,7 +106,7 @@ public void infoText() {
 
 */
 public void draw() {
-  background(255);
+  background(0);
 
   // random gap
   int gap = int( sqrt(random(2,200)) );
@@ -119,13 +119,13 @@ public void draw() {
     rms_scaled = rms_scaled * shape;
     int left = x+padding;
     // draw points
-    strokeWeight(2);
-    stroke(70,10,10);
+    strokeWeight(5);
+    stroke(200,10,10);
     point( left, halfH - rms_scaled);
     point( left, halfH + rms_scaled);
     // draw line
     strokeWeight(1);
-    stroke(100,100,100, 100);
+    stroke(255,255,255, 170);
     line( left, halfH - rms_scaled,  left, halfH + rms_scaled);
   }
 
