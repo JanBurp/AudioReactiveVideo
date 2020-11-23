@@ -15,7 +15,8 @@ So i'm developing this processing code to make visuals for me. Starting simple a
 With the musical project 'Zaagstof', a dutch impro collective, we publish roughly once in two weeks a track on YouTube. With each new track i'm planning to create a new step with this processing sketch to create more exciting visuals. And in the meantime have a nice goal for diving into processing and sound analyses.
 
 ### Releases
-v1.0 - Just a basic amplitude follower that draws two lines shaped within a sineform.
+v1.1 - Just a basic amplitude follower that draws two lines shaped within a sineform.
+v1.2 - A lot of bouncing balls reacting to the volume and gravity.
 
 ## License
 Creative Commons - Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
