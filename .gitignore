@@ -1,3 +1,5 @@
 /ffmpeg.txt
 /ffmpeg-audio.txt
 *.mp4
+/build-tmp
+*.wav
