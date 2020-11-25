@@ -59,7 +59,7 @@ float textFadeTime = 1000.0;
 public void setup() {
   size(1280,720);
   colorMode(HSB, 360, 100, 100, 100);
-  background(180,50,50);
+  background(270,50,50);
 
   frameRate(movieFPS);
   randomSeed(0);
@@ -126,7 +126,7 @@ public void infoText(float playTime) {
 
 */
 public void draw() {
-  background(180,50,50);
+  background(270,50,50);
 
   // Analyse audio & calc sizes
   sum += (rms.analyze()*ampFactor - sum) * smoothingFactor;
@@ -314,8 +314,8 @@ class Point {
     if (position.x>0 && position.x<width && position.y>0 && position.y<height) {
       int hue = 60 - int( volume*60 );
       strokeWeight( int(float(radius)/float(maxRadius) * 20 ));
-      stroke( hue ,100,70, 70);
-      fill(hue,100,100,50);
+      stroke( hue ,100,70, 90);
+      fill(hue,100,100,70);
       circle(position.x,position.y,radius*2);
     }
   }
