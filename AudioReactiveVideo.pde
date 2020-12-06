@@ -16,7 +16,7 @@ String textRight = "by: Jan den Besten";
 import com.hamoid.*;
 float movieFPS = 30;
 VideoExport videoExport;
-boolean exportOn = true;
+boolean exportOn = false;
 
 // Audio
 import processing.sound.*;
@@ -57,7 +57,8 @@ float textFadeTime = 1000.0;
 
 */
 public void setup() {
-  size(1280,720);
+  size(1280,720,P2D);
+  pixelDensity(2);
   colorMode(HSB, 360, 100, 100, 100);
   background(270,50,50);
 
