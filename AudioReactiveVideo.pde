@@ -26,7 +26,7 @@ float soundDuration = 0;
 float ampFactor = 1.25;
 
 // Visuals
-float smoothingFactor = 0.85;
+float smoothingFactor = 0.75;
 float sum;
 
 // ScreenSizes
@@ -36,10 +36,10 @@ int H;
 PVector gravity;
 
 // Points
-int nrOfPoints = 256;
-int minRadius = 1;
-int maxRadius = 35;
-int maxSpeed = 35;
+int nrOfPoints = 100;
+int minRadius = 5;
+int maxRadius = 25;
+int maxSpeed = 25;
 Point[] points;
 
 
@@ -60,7 +60,7 @@ public void setup() {
   size(1280,720,P2D);
   pixelDensity(2);
   colorMode(HSB, 360, 100, 100, 100);
-  background(270,50,50);
+  background(30,30,30);
 
   frameRate(movieFPS);
   randomSeed(0);
@@ -69,7 +69,7 @@ public void setup() {
   padding = 20;
   W = width - padding*2;
   H = height - padding*2;
-  gravity = new PVector( 0, 0.35 );
+  gravity = new PVector( 0, -.05 );
 
   // Create random points
   points = new Point[nrOfPoints];
@@ -94,6 +94,10 @@ public void setup() {
     videoExport.setMovieFileName(audioFile + ".mp4");
     videoExport.startMovie();
   }
+  
+  // show text
+  infoText();
+
 }
 
 
@@ -103,15 +107,8 @@ public void setup() {
   Display tekst
 
  */
-public void infoText(float playTime) {
+public void infoText() {
   float textOpacity = 100;
-
-  // Fade out at start
-  textOpacity = (textFadeTime / playTime) * 100;
-  // Fade in near end
-  if(frameCount > round(movieFPS * (soundDuration - textFadeTime/1000)) ) {
-    textOpacity = ( textFadeTime / (playTime - soundDuration*1000) ) * 100;
-  }
   textSize(20);
 
   textAlign(LEFT);
@@ -127,7 +124,7 @@ public void infoText(float playTime) {
 
 */
 public void draw() {
-  background(270,50,50);
+  //background(270,50,50);
 
   // Analyse audio & calc sizes
   sum += (rms.analyze()*ampFactor - sum) * smoothingFactor;
@@ -151,9 +148,6 @@ public void draw() {
 
 
   float playTime = float(millis() - startTime);
-
-  // show text
-  infoText(playTime);
 
   // Export video
   if (exportOn) {
@@ -183,7 +177,7 @@ class Point {
 
   Point() {
     position = new PVector( int(random(width)), int(random(height)) );
-    velocity = new PVector( 0, random(maxSpeed/4) );
+    velocity = new PVector( random(maxSpeed*2)-maxSpeed, random(maxSpeed*2)-maxSpeed );
     volume = 0;
     initRadius = random(minRadius,minRadius+2);
     radius = int(initRadius);
@@ -205,16 +199,16 @@ class Point {
   void checkBoundaryCollision() {
     if (position.x > width-radius) {
       position.x = width-radius;
-      velocity.x *= -0.9;
+      velocity.x *= -1;
     } else if (position.x < radius) {
       position.x = radius;
-      velocity.x *= -0.9;
-    } else if (position.y > height-radius) {
-      position.y = height-radius;
-      velocity.y *= -0.7;
+      velocity.x *= -1;
+    //} else if (position.y > height-radius) {
+    //  position.y = height-radius;
+    //  velocity.y *= -0.7;
     } else if (position.y < radius) {
-      // position.y = radius;
-      // velocity.y *= -0.7;
+       position.y = radius;
+       velocity.y *= -0.9;
     }
   }
 
@@ -313,11 +307,11 @@ class Point {
 
   void draw() {
     if (position.x>0 && position.x<width && position.y>0 && position.y<height) {
-      int hue = 60 - int( volume*60 );
-      strokeWeight( int(float(radius)/float(maxRadius) * 20 ));
-      stroke( hue ,100,70, 90);
-      fill(hue,100,100,70);
-      circle(position.x,position.y,radius*2);
+      int hue = 312 - int( volume*338 );
+      strokeWeight( int(float(radius)/float(maxRadius) * 7 ));
+      stroke(hue,70,78,70 - volume*60);
+      fill(hue,80,60,60 - volume*54);
+      circle(position.x,position.y,radius);
     }
   }
 
