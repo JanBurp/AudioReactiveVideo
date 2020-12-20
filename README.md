@@ -16,6 +16,7 @@ With the musical project 'Zaagstof', a dutch impro collective, we publish roughl
 You can see examples on the YouTube playlist of 'Zaagstof': https://www.youtube.com/playlist?list=PLRnF3ON_bf27HfI0NtnziLUvLfZki-_H4
 
 ### Releases
+- v2.0.0 - Shapes in Space!
 - v1.2.5 - A lot of balls with tails and inversed gravity.
 - v1.2.1 - A lot of bouncing balls reacting to the volume and gravity.
 - v1.1.0 - Just a basic amplitude follower that draws two lines shaped within a sineform.
