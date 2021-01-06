@@ -35,13 +35,13 @@ int W;
 int H;
 
 // Shapes
-int nrOfShapes = 5;
+int nrOfShapes = 50;
 Shape[] shapes;
 
-int formResolution = 4;
-int stepSize = 1;
-float speed = 0.02;
-float initRadius = 75;
+int formResolution = 2;
+int stepSize = 3;
+float speed = 0.04;
+float initRadius = 15;
 
 
 
@@ -62,10 +62,10 @@ public void setup() {
   size(1280,720);
   pixelDensity(2);
   colorMode(HSB, 360, 100, 100, 100);
-  background(30,0,20);
+  background(240,10,70);
 
   frameRate(movieFPS);
-  randomSeed(0);
+  randomSeed(1);
 
   // Global Sizes & Movement
   padding = 20;
@@ -104,7 +104,7 @@ public void infoText() {
   float textOpacity = 100;
   textSize(20);
   textAlign(LEFT);
-  fill(60,50,100,textOpacity);
+  fill(60,0,100,textOpacity);
   text(textLeft, padding, padding*2);
   textAlign(RIGHT);
   text(textRight, width-padding, padding*2);
@@ -165,7 +165,7 @@ class Shape {
   }
 
   void newGoal() {
-    float maxSize = initRadius * 15;
+    float maxSize = initRadius * 75;
     goalX = centerX + random(-maxSize,maxSize);
     while (goalX<0) {
       goalX += maxSize;
@@ -188,8 +188,8 @@ class Shape {
   }
 
   void calcNewPosition() {
-    centerX += (goalX-centerX) * speed * volume;
-    centerY += (goalY-centerY) * speed * volume;
+    centerX += (goalX-centerX) * speed * volume/2;
+    centerY += (goalY-centerY) * speed * volume/2;
     if ( abs(goalX - centerX) < 50 && abs(goalY - centerY) < 50 ) {
       newGoal();
     }
@@ -201,8 +201,9 @@ class Shape {
   }
 
   void draw() {
-    stroke( hue-int(volume*30), 35+25*volume, 35+35*volume, 25+25*volume);
+    stroke( hue-int(volume*30), 5+75*volume, 5+95*volume, 5+75*volume);
     strokeWeight(1+7*volume);
+    //fill( hue-int(volume*30), 25+25*volume, 15+50*volume, 15);
     noFill();
 
 
