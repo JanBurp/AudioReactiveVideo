@@ -97,7 +97,7 @@ public void setup() {
     videoExport.startMovie();
   }
 
-  infoText();
+  //infoText();
 }
 
 public void infoText() {
@@ -111,10 +111,10 @@ public void infoText() {
 }
 
 public void draw() {
-  //background(270,50,50);
-
   // Analyse audio & calc sizes
   sum += (rms.analyze()*ampFactor - sum) * smoothingFactor;
+  
+  background(240-sum*10,10,70-sum*2,0.1);
 
   // Loop shapes
   for( int p=0; p<nrOfShapes; p++ ) { //<>//
@@ -154,8 +154,8 @@ class Shape {
   Shape(int c) {
     volume = 0;
     hue = (360/nrOfShapes) * (c+1);
-    centerX = width/2;
-    centerY = height/2;
+    centerX = random(-initRadius*2,width+2*initRadius);
+    centerY = height + initRadius;
     float angle = radians(360/float(formResolution));
     for (int i=0; i<formResolution; i++){
       x[i] = cos(angle*i) * initRadius;
@@ -165,7 +165,7 @@ class Shape {
   }
 
   void newGoal() {
-    float maxSize = initRadius * 75;
+    float maxSize = initRadius * 25;
     goalX = centerX + random(-maxSize,maxSize);
     while (goalX<0) {
       goalX += maxSize;
@@ -201,10 +201,10 @@ class Shape {
   }
 
   void draw() {
-    stroke( hue-int(volume*30), 5+75*volume, 5+95*volume, 5+75*volume);
-    strokeWeight(1+7*volume);
-    //fill( hue-int(volume*30), 25+25*volume, 15+50*volume, 15);
-    noFill();
+    stroke( hue-int(volume*30), 15+50*volume, 25+35*volume, 5+35*volume);
+    strokeWeight(2+3*volume);
+    fill( hue-int(volume*30), 25+25*volume, 15+50*volume, 5+25*volume);
+    //noFill();
 
 
     beginShape();

@@ -16,6 +16,7 @@ With the musical project 'Zaagstof', a dutch impro collective, we publish roughl
 You can see examples on the YouTube playlist of 'Zaagstof': https://www.youtube.com/playlist?list=PLRnF3ON_bf27HfI0NtnziLUvLfZki-_H4
 
 ### Releases
+- v2.2.0 - Airy Shapes.
 - v2.1.0 - Lines in Shape!
 - v2.0.0 - Shapes in Space!
 - v1.2.5 - A lot of balls with tails and inversed gravity.
