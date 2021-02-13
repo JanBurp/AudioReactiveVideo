@@ -6,9 +6,6 @@
 // Put you're audio file in the 'data' folder and fill in the name:
 String audioFile = "test.wav";
 
-// Titles
-String textLeft = "";
-String textRight = "Visual: Jan den Besten";
 
 // =========== DON'T CHANGE ANYTHING UNDER THIS LINE (or know what you do) =========== //
 
@@ -23,10 +20,10 @@ import processing.sound.*;
 SoundFile sample;
 Amplitude rms;
 float soundDuration = 0;
-float ampFactor = 1.25;
+float ampFactor = 1.5;
 
 // Visuals
-float smoothingFactor = 0.75;
+float smoothingFactor = 1;
 float sum;
 
 // ScreenSizes
@@ -35,22 +32,16 @@ int W;
 int H;
 
 // Shapes
-int nrOfShapes = 50;
+int nrOfShapes = 25;
 Shape[] shapes;
 
-int formResolution = 2;
-int stepSize = 3;
-float speed = 0.04;
-float initRadius = 15;
+int formResolution = 5;
+int stepSize = 7;
+float speed = 0.5;
+float initRadius = 100;
 
-
-
-// Font
-PFont lucida;
-
-// Timing
 int startTime = millis();
-float textFadeTime = 1000.0;
+int fadeInTime = 150000;
 
 
 /*
@@ -59,7 +50,7 @@ float textFadeTime = 1000.0;
 
 */
 public void setup() {
-  size(1280,720);
+  size(1280,720,P2D);
   pixelDensity(2);
   colorMode(HSB, 360, 100, 100, 100);
   background(240,10,70);
@@ -97,32 +88,20 @@ public void setup() {
     videoExport.startMovie();
   }
 
-  //infoText();
-}
-
-public void infoText() {
-  float textOpacity = 100;
-  textSize(20);
-  textAlign(LEFT);
-  fill(60,0,100,textOpacity);
-  text(textLeft, padding, padding*2);
-  textAlign(RIGHT);
-  text(textRight, width-padding, padding*2);
 }
 
 public void draw() {
   // Analyse audio & calc sizes
   sum += (rms.analyze()*ampFactor - sum) * smoothingFactor;
-  
-  background(240-sum*10,10,70-sum*2,0.1);
+
+  background(240-sum*10,10,40-sum*2,0.1);
 
   // Loop shapes
-  for( int p=0; p<nrOfShapes; p++ ) { //<>//
+  for( int p=0; p<nrOfShapes; p++ ) { //<>// //<>//
    shapes[p].setVolume(sum);
    shapes[p].calcNewPosition();
    shapes[p].draw();
   }
-
 
   // Export video
   if (exportOn) {
@@ -146,41 +125,30 @@ public void draw() {
 class Shape {
   float volume;
   int hue;
-  float centerX, centerY;
-  float goalX, goalY;
+  float centerX, centerY, size;
+  float speedX, speedY;
   float[] x = new float[formResolution];
   float[] y = new float[formResolution];
 
   Shape(int c) {
-    volume = 0;
-    hue = (360/nrOfShapes) * (c+1);
-    centerX = random(-initRadius*2,width+2*initRadius);
-    centerY = height + initRadius;
+    volume = 0.0;
+    hue = int(random(360));
+    centerX = width/2;
+    centerY = height/2;
+    size = 10 + float(c*3/nrOfShapes) * initRadius  ;
     float angle = radians(360/float(formResolution));
     for (int i=0; i<formResolution; i++){
-      x[i] = cos(angle*i) * initRadius;
-      y[i] = sin(angle*i) * initRadius;
+      x[i] = cos(angle*i) * size;
+      y[i] = sin(angle*i) * size;
     }
     newGoal();
   }
 
   void newGoal() {
-    float maxSize = initRadius * 25;
-    goalX = centerX + random(-maxSize,maxSize);
-    while (goalX<0) {
-      goalX += maxSize;
-    }
-    while (goalX>width) {
-      goalX -= maxSize;
-    }
-
-    goalY = centerY + random(-maxSize,maxSize);
-    while (goalY<0) {
-      goalY += maxSize;
-    }
-    while (goalY>height) {
-      goalY -= maxSize;
-    }
+    float maxSpeed = float(width)/1000000 * (size/initRadius/2);
+    speedX = random(-maxSpeed,maxSpeed);
+    maxSpeed = float(height)/1000000;
+    speedY = random(-maxSpeed,maxSpeed);
   }
 
   void setVolume(float set_volume) {
@@ -188,35 +156,67 @@ class Shape {
   }
 
   void calcNewPosition() {
-    centerX += (goalX-centerX) * speed * volume/2;
-    centerY += (goalY-centerY) * speed * volume/2;
-    if ( abs(goalX - centerX) < 50 && abs(goalY - centerY) < 50 ) {
-      newGoal();
+    centerX += speedX * scale(volume*10000);
+    centerY += speedY * scale(volume*10000);
+
+    float boundary = initRadius*3;
+
+    if ( centerX>width+boundary) {
+      centerX = -boundary;
+    }
+    if ( centerX<-boundary ) {
+      centerX = width+boundary;
+    }
+    if ( centerY>height+boundary) {
+      centerY = -boundary;
+    }
+    if (centerY<-boundary ) {
+      centerY = height + boundary;
     }
 
     for (int i=0; i<formResolution; i++){
-      x[i] += random(-stepSize,stepSize);
-      y[i] += random(-stepSize,stepSize);
+      float step = stepSize * volume;
+      x[i] += random(-step,step);
+      y[i] += random(-step,step);
     }
   }
 
   void draw() {
-    stroke( hue-int(volume*30), 15+50*volume, 25+35*volume, 5+35*volume);
-    strokeWeight(2+3*volume);
-    fill( hue-int(volume*30), 25+25*volume, 15+50*volume, 5+25*volume);
+    strokeWeight( 1+ size/50 * volume);
+    stroke( hue-int(volume*30), 5+75*volume, scale(size/10+15*volume), 70);
+    fill( hue-int(volume*30), 5+50*volume, scale(size/3+50*volume), 75);
     //noFill();
 
 
-    beginShape();
-    // start controlpoint
-    curveVertex(x[formResolution-1]+centerX, y[formResolution-1]+centerY);
     for (int i=0; i<formResolution; i++){
-      curveVertex(x[i]+centerX, y[i]+centerY);
+      //curveVertex(centerX,centerY);
+      //curveVertex(scale(x[i])+centerX, scale(y[i])+centerY);
+      line(centerX,centerY, scale(x[i])+centerX, scale(y[i])+centerY);
     }
-    curveVertex(x[0]+centerX, y[0]+centerY);
+
+    // start controlpoint
+    beginShape();
+    curveVertex( scale(x[formResolution-1])+centerX, scale(y[formResolution-1])+centerY);
+    for (int i=0; i<formResolution; i++){
+      curveVertex(scale(x[i])+centerX, scale(y[i])+centerY);
+    }
+    curveVertex( scale(x[0])+centerX, scale(y[0])+centerY);
     // end controlpoint
-    curveVertex(x[1]+centerX, y[1]+centerY);
+    curveVertex( scale(x[1])+centerX, scale(y[1])+centerY);
     endShape();
   }
 
-} //<>//
+  float scale(float pos) {
+    float scale = 1.0;
+    int now = millis();
+    float time = now - startTime;
+    if (time < fadeInTime) {
+      scale = time / fadeInTime;
+    }
+    if ( time > (soundDuration*1000-fadeInTime) ) {
+      scale = (soundDuration*1000 - time) / fadeInTime;
+    }
+    return pos * scale;
+  }
+
+}
