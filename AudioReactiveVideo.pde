@@ -13,7 +13,7 @@ String audioFile = "test.wav";
 import com.hamoid.*;
 float movieFPS = 30;
 VideoExport videoExport;
-boolean exportOn = true;
+boolean exportOn = false;
 
 // Audio
 import processing.sound.*;
@@ -32,16 +32,16 @@ int W;
 int H;
 
 // Shapes
-int nrOfShapes = 25;
+int nrOfShapes = 50;
 Shape[] shapes;
 
-int formResolution = 5;
-int stepSize = 7;
-float speed = 0.5;
-float initRadius = 100;
+int formResolution = 3;
+int stepSize = 10;
+float speed = 1.5;
+float initRadius = 70;
 
 int startTime = millis();
-int fadeInTime = 150000;
+int fadeInTime = 30000;
 
 
 /*
@@ -94,7 +94,10 @@ public void draw() {
   // Analyse audio & calc sizes
   sum += (rms.analyze()*ampFactor - sum) * smoothingFactor;
 
-  background(240-sum*10,10,40-sum*2,0.1);
+  fill(60-sum*240,10,30-sum*2,9);
+  noStroke();
+  rect(0,0,width,height);
+
 
   // Loop shapes
   for( int p=0; p<nrOfShapes; p++ ) { //<>// //<>//
@@ -102,6 +105,9 @@ public void draw() {
    shapes[p].calcNewPosition();
    shapes[p].draw();
   }
+
+  // shuffle
+  //shuffle(sum);
 
   // Export video
   if (exportOn) {
@@ -118,6 +124,20 @@ public void draw() {
   }
 }
 
+//public void shuffle(float sum) {
+//  if (sum>0.1) {
+//    int w = int(random(10,width/2));
+//    int h = int(random(10,height/2));
+//    int hsize = width/4;
+//    int vsize = height/4;
+//    int x1 = int(random(0, width));
+//    int y1 = int(random(0, height));
+//    int x2 = round(x1 + w);
+//    int y2 = round(y1 + h);
+//    copy(x1, y1, w, h, x2, y2, w, h);
+//  }
+//}
+
 
 // =============
 
@@ -126,7 +146,7 @@ class Shape {
   float volume;
   int hue;
   float centerX, centerY, size;
-  float speedX, speedY;
+  float goalX, goalY, speedX,speedY;
   float[] x = new float[formResolution];
   float[] y = new float[formResolution];
 
@@ -135,20 +155,20 @@ class Shape {
     hue = int(random(360));
     centerX = width/2;
     centerY = height/2;
-    size = 10 + float(c*3/nrOfShapes) * initRadius  ;
+    size = 0;
     float angle = radians(360/float(formResolution));
     for (int i=0; i<formResolution; i++){
-      x[i] = cos(angle*i) * size;
-      y[i] = sin(angle*i) * size;
+      x[i] = cos(angle*i) * speedScale(size);
+      y[i] = sin(angle*i) * speedScale(size);
     }
     newGoal();
   }
 
   void newGoal() {
-    float maxSpeed = float(width)/1000000 * (size/initRadius/2);
-    speedX = random(-maxSpeed,maxSpeed);
-    maxSpeed = float(height)/1000000;
-    speedY = random(-maxSpeed,maxSpeed);
+    goalX = random(-width,width*2);
+    goalY = random(-width,width*2);
+    speedX = (goalX - centerX) / 10000;
+    speedY = (goalY - centerY) / 10000;
   }
 
   void setVolume(float set_volume) {
@@ -156,66 +176,75 @@ class Shape {
   }
 
   void calcNewPosition() {
-    centerX += speedX * scale(volume*10000);
-    centerY += speedY * scale(volume*10000);
+    if (size>=0) {
+      centerX += speedScale(speedX);
+      centerY += speedScale(speedY);
+      speedX *= 1.01;
+      speedY *= 1.01;
+      size = abs(width/2 - centerX) / 300;
 
-    float boundary = initRadius*3;
+      for (int i=0; i<formResolution; i++){
+        float step = stepSize * volume;
+        x[i] += random(-step,step);
+        y[i] += random(-step,step);
+      }
 
-    if ( centerX>width+boundary) {
-      centerX = -boundary;
-    }
-    if ( centerX<-boundary ) {
-      centerX = width+boundary;
-    }
-    if ( centerY>height+boundary) {
-      centerY = -boundary;
-    }
-    if (centerY<-boundary ) {
-      centerY = height + boundary;
-    }
+      if ( size>width || (centerX < -size || centerX > width+size) && (centerY < -size || centerY > height+size ) ) {
+        centerX = width/2;
+        centerY = height/2;
+        size = 1;
+        newGoal();
 
-    for (int i=0; i<formResolution; i++){
-      float step = stepSize * volume;
-      x[i] += random(-step,step);
-      y[i] += random(-step,step);
+        // If near ending - don't draw anymore...
+        int now = millis();
+        float time = now - startTime;
+        float scale = 1;
+        if ( time > (soundDuration*1000-fadeInTime) ) {
+          size = -1;
+        }
+      }
     }
   }
 
   void draw() {
-    strokeWeight( 1+ size/50 * volume);
-    stroke( hue-int(volume*30), 5+75*volume, scale(size/10+15*volume), 70);
-    fill( hue-int(volume*30), 5+50*volume, scale(size/3+50*volume), 75);
-    //noFill();
+    if (size>=0) {
+      strokeWeight( 1+ size/50 * volume * 2);
+      stroke( hue-int(volume*30), 50+75*volume, size/2+25*volume, 30 + size/3);
+      fill( hue-int(volume*30), 50+50*volume, size+70*volume, 55 + size/3);
+      //noFill();
 
+      //for (int i=0; i<formResolution; i++){
+      //  line(centerX,centerY, scale(x[i])+centerX, scale(y[i])+centerY);
+      //}
 
-    for (int i=0; i<formResolution; i++){
-      //curveVertex(centerX,centerY);
-      //curveVertex(scale(x[i])+centerX, scale(y[i])+centerY);
-      line(centerX,centerY, scale(x[i])+centerX, scale(y[i])+centerY);
+      // start controlpoint
+      beginShape();
+      curveVertex( scale(x[formResolution-1])+centerX, scale(y[formResolution-1])+centerY);
+      for (int i=0; i<formResolution; i++){
+        curveVertex(scale(x[i])+centerX, scale(y[i])+centerY);
+      }
+      curveVertex( scale(x[0])+centerX, scale(y[0])+centerY);
+      // end controlpoint
+      curveVertex( scale(x[1])+centerX, scale(y[1])+centerY);
+      endShape();
     }
-
-    // start controlpoint
-    beginShape();
-    curveVertex( scale(x[formResolution-1])+centerX, scale(y[formResolution-1])+centerY);
-    for (int i=0; i<formResolution; i++){
-      curveVertex(scale(x[i])+centerX, scale(y[i])+centerY);
-    }
-    curveVertex( scale(x[0])+centerX, scale(y[0])+centerY);
-    // end controlpoint
-    curveVertex( scale(x[1])+centerX, scale(y[1])+centerY);
-    endShape();
   }
 
-  float scale(float pos) {
-    float scale = 1.0;
+  float speedScale(float speed) {
     int now = millis();
     float time = now - startTime;
+    float scale = 1;
     if (time < fadeInTime) {
       scale = time / fadeInTime;
     }
     if ( time > (soundDuration*1000-fadeInTime) ) {
       scale = (soundDuration*1000 - time) / fadeInTime;
     }
+    return speed * scale;
+  }
+
+  float scale(float pos) {
+    float scale = size;
     return pos * scale;
   }
 
