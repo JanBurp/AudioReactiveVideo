@@ -3,3 +3,4 @@
 *.mp4
 /build-tmp
 *.wav
+*.autosave
