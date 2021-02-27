@@ -4,44 +4,54 @@
  */
 
 // Put you're audio file in the 'data' folder and fill in the name:
-String audioFile = "test.wav";
+String audioFile = "Zaagstof-drang-kort.wav";
+
+// Basic colors
+color backgroundColor = color(128,64,128);
+
+// Timing
+int fadeInTime = 30000;
+int fadeOutTime = 30000;
+
+// Scenes
+
+
+// Objects
+
+
 
 
 // =========== DON'T CHANGE ANYTHING UNDER THIS LINE (or know what you do) =========== //
 
-// Video
-import com.hamoid.*;
-float movieFPS = 30;
-VideoExport videoExport;
-boolean exportOn = false;
+// Time
+int startTime = millis();
+int endTime = 0; // will be startTime + duration of soundfile
+int playTime = 0;
+
 
 // Audio
 import processing.sound.*;
 SoundFile sample;
-Amplitude rms;
-float soundDuration = 0;
-float ampFactor = 1.5;
+int soundDuration = 0;
+
+Amplitude amplitude;
+FFT fft;
+int bands = 16; // power of 2
+AudioAnalyzer analyzer;
 
 // Visuals
-float smoothingFactor = 1;
-float sum;
+float smoothingFactorUp = 0.8;
+float smoothingFactorDown = 0.02;
 
-// ScreenSizes
-int padding;
-int W;
-int H;
+// // Shapes
+// int nrOfShapes = 50;
+// Shape[] shapes;
 
-// Shapes
-int nrOfShapes = 50;
-Shape[] shapes;
+// int formResolution = 3;
+// int stepSize = 10;
+// float speed = 1.5;
+// float initRadius = 70;
 
-int formResolution = 3;
-int stepSize = 10;
-float speed = 1.5;
-float initRadius = 70;
-
-int startTime = millis();
-int fadeInTime = 30000;
 
 
 /*
@@ -50,202 +60,292 @@ int fadeInTime = 30000;
 
 */
 public void setup() {
+  // fullScreen(P2D);
   size(1280,720,P2D);
-  pixelDensity(2);
-  colorMode(HSB, 360, 100, 100, 100);
-  background(240,10,70);
+  // pixelDensity(2);
+  background(backgroundColor);
 
-  frameRate(movieFPS);
   randomSeed(1);
 
-  // Global Sizes & Movement
-  padding = 20;
-  W = width - padding*2;
-  H = height - padding*2;
 
-  // Create random Shapes
-  shapes = new Shape[nrOfShapes];
-  for( int p=0; p<nrOfShapes; p++ ) {
-    shapes[p] = new Shape(p);
-    shapes[p].draw();
-  }
-
-
-  // Audio
+  // Start Analyzing Audio
   sample = new SoundFile(this, audioFile);
-  soundDuration = sample.duration();
-  sample.loop();
-  rms = new Amplitude(this);
-  rms.input(sample);
+  soundDuration = int(sample.duration() * 1000);
+  sample.play();
 
-  // Video export
-  if (exportOn) {
-    videoExport = new VideoExport(this);
-    videoExport.setFrameRate(movieFPS);
-    videoExport.setQuality(70, 128);
-    videoExport.setAudioFileName(audioFile);
-    videoExport.setMovieFileName(audioFile + ".mp4");
-    videoExport.startMovie();
-  }
+  amplitude = new Amplitude(this);
+  fft = new FFT(this, bands);
+  analyzer = new AudioAnalyzer(sample);
 
+  startTime = millis();
+  endTime = startTime + soundDuration;
+  println("Start - End",startTime,endTime,soundDuration);
 }
+
 
 public void draw() {
-  // Analyse audio & calc sizes
-  sum += (rms.analyze()*ampFactor - sum) * smoothingFactor;
+  background(backgroundColor);
 
-  fill(60-sum*240,10,30-sum*2,9);
-  noStroke();
-  rect(0,0,width,height);
+  // Time
+  playTime = millis() - startTime;
+  //println(playTime);
 
+  // Analyse Audio
+  analyzer.analyze();
 
-  // Loop shapes
-  for( int p=0; p<nrOfShapes; p++ ) { //<>// //<>//
-   shapes[p].setVolume(sum);
-   shapes[p].calcNewPosition();
-   shapes[p].draw();
-  }
-
-  // shuffle
-  //shuffle(sum);
-
-  // Export video
-  if (exportOn) {
-    videoExport.saveFrame();
-    if(frameCount > round(movieFPS * soundDuration)) {
-      videoExport.endMovie();
-      exit();
-    }
+  if (analyzer.isNormalizing()) {
+    analyzer.drawBands();
   }
   else {
-    if(frameCount > round(movieFPS * soundDuration)) {
-      exit();
-    }
+    analyzer.drawEqualizer();
+  }
+
+  // END - save fft analyzer
+  if (playTime > endTime) {
+    analyzer.saveNormalizeData();
+    exit();
   }
 }
-
-//public void shuffle(float sum) {
-//  if (sum>0.1) {
-//    int w = int(random(10,width/2));
-//    int h = int(random(10,height/2));
-//    int hsize = width/4;
-//    int vsize = height/4;
-//    int x1 = int(random(0, width));
-//    int y1 = int(random(0, height));
-//    int x2 = round(x1 + w);
-//    int y2 = round(y1 + h);
-//    copy(x1, y1, w, h, x2, y2, w, h);
-//  }
-//}
 
 
 // =============
 
 
-class Shape {
+class AudioAnalyzer {
+
+  SoundFile sample;
   float volume;
-  int hue;
-  float centerX, centerY, size;
-  float goalX, goalY, speedX,speedY;
-  float[] x = new float[formResolution];
-  float[] y = new float[formResolution];
+  float[] volumeSpectrum = new float[bands]; //<>//
+  float[] smoothSpectrum = new float[bands];
+  float[] maxSpectrum = new float[bands];
+  float[] rmsSpectrum = new float[bands];
+  long rmsSamples = 0;
+  float[] normalizedFactor = new float[bands];
+  boolean isNormalizing = false;
 
-  Shape(int c) {
-    volume = 0.0;
-    hue = int(random(360));
-    centerX = width/2;
-    centerY = height/2;
-    size = 0;
-    float angle = radians(360/float(formResolution));
-    for (int i=0; i<formResolution; i++){
-      x[i] = cos(angle*i) * speedScale(size);
-      y[i] = sin(angle*i) * speedScale(size);
+  AudioAnalyzer(SoundFile sound) {
+    sample = sound;
+    amplitude.input(sample);
+    fft.input(sample);
+    for(int i = 0; i < bands; i++){
+     smoothSpectrum[i] = 0.0;
+     maxSpectrum[i] = 0.0;
+     rmsSpectrum[i] = 0.0;
+     normalizedFactor[i] = 1.0;
     }
-    newGoal();
+    loadNormalizeData();
   }
 
-  void newGoal() {
-    goalX = random(-width,width*2);
-    goalY = random(-width,width*2);
-    speedX = (goalX - centerX) / 10000;
-    speedY = (goalY - centerY) / 10000;
-  }
-
-  void setVolume(float set_volume) {
-    volume = set_volume;
-  }
-
-  void calcNewPosition() {
-    if (size>=0) {
-      centerX += speedScale(speedX);
-      centerY += speedScale(speedY);
-      speedX *= 1.01;
-      speedY *= 1.01;
-      size = abs(width/2 - centerX) / 300;
-
-      for (int i=0; i<formResolution; i++){
-        float step = stepSize * volume;
-        x[i] += random(-step,step);
-        y[i] += random(-step,step);
+  void analyze() {
+    volume = amplitude.analyze();
+    fft.analyze(volumeSpectrum);
+    for(int i = 0; i < bands; i++){
+      // analyze
+      if (volumeSpectrum[i] > maxSpectrum[i]) { maxSpectrum[i]=volumeSpectrum[i]; }
+      rmsSpectrum[i] += volumeSpectrum[i] * volumeSpectrum[i];
+      rmsSamples++;
+      // map
+      volumeSpectrum[i] = volumeSpectrum[i] * normalizedFactor[i];
+      if (volumeSpectrum[i]>smoothSpectrum[i]) {
+        smoothSpectrum[i] += (volumeSpectrum[i] - smoothSpectrum[i]) * smoothingFactorUp;
       }
-
-      if ( size>width || (centerX < -size || centerX > width+size) && (centerY < -size || centerY > height+size ) ) {
-        centerX = width/2;
-        centerY = height/2;
-        size = 1;
-        newGoal();
-
-        // If near ending - don't draw anymore...
-        int now = millis();
-        float time = now - startTime;
-        float scale = 1;
-        if ( time > (soundDuration*1000-fadeInTime) ) {
-          size = -1;
-        }
+      else {
+        smoothSpectrum[i] += (volumeSpectrum[i] - smoothSpectrum[i]) * smoothingFactorDown;
       }
     }
   }
 
-  void draw() {
-    if (size>=0) {
-      strokeWeight( 1+ size/50 * volume * 2);
-      stroke( hue-int(volume*30), 50+75*volume, size/2+25*volume, 30 + size/3);
-      fill( hue-int(volume*30), 50+50*volume, size+70*volume, 55 + size/3);
-      //noFill();
+  boolean isNormalizing() {
+    return isNormalizing;
+  }
 
-      //for (int i=0; i<formResolution; i++){
-      //  line(centerX,centerY, scale(x[i])+centerX, scale(y[i])+centerY);
-      //}
+  void drawBands() {
+    background(0,0,0);
+    textSize(32);
+    text("Analyzing "+bands+" FFT bands of `"+audioFile+"'.", 10, 30);
+    drawEqualizer();
+  }
 
-      // start controlpoint
-      beginShape();
-      curveVertex( scale(x[formResolution-1])+centerX, scale(y[formResolution-1])+centerY);
-      for (int i=0; i<formResolution; i++){
-        curveVertex(scale(x[i])+centerX, scale(y[i])+centerY);
-      }
-      curveVertex( scale(x[0])+centerX, scale(y[0])+centerY);
-      // end controlpoint
-      curveVertex( scale(x[1])+centerX, scale(y[1])+centerY);
-      endShape();
+  void drawEqualizer() {
+    int padding = 10;
+    int barW = width / bands - padding * 2;
+    fill(255,0,0);
+    stroke(0,0,0);
+    for(int i = 0; i < bands; i++) {
+      rect( i*barW + padding , height + padding, barW - padding, height - padding - getSpectrumBandSmooth(i) * (height-padding) * 2 );
     }
   }
 
-  float speedScale(float speed) {
-    int now = millis();
-    float time = now - startTime;
-    float scale = 1;
-    if (time < fadeInTime) {
-      scale = time / fadeInTime;
-    }
-    if ( time > (soundDuration*1000-fadeInTime) ) {
-      scale = (soundDuration*1000 - time) / fadeInTime;
-    }
-    return speed * scale;
+  float getVolume() {
+    return volume;
   }
 
-  float scale(float pos) {
-    float scale = size;
-    return pos * scale;
+  float getVolumeSmooth() {
+    return volume;
+  }
+
+  float getSpectrumBand(int band) {
+    return volumeSpectrum[band];
+  }
+
+  float getSpectrumBandSmooth(int band) {
+    return smoothSpectrum[band];
+  }
+
+  void loadNormalizeData() {
+    File file = dataFile(getNormalizeFilename());
+    isNormalizing = !file.isFile();
+    if (!isNormalizing){
+     Table table;
+     table = loadTable("data/"+getNormalizeFilename(), "header");
+     if ( table.getRowCount() > 0 ) {
+       println(table.getRowCount() + " total rows in table");
+
+       for (TableRow row : table.rows()) {
+         int band = row.getInt("band");
+         float factor = row.getFloat("factor");
+         normalizedFactor[band] = factor;
+         // println("Band ",band," => ",normalizedFactor[band]);
+       }
+     }
+    }
+    else {
+      println("No normalize data => Analyzing now...");
+    }
+  }
+
+  void saveNormalizeData() {
+    float rmsFactor = 0.0;
+    Table table = new Table();
+    table.addColumn("band");
+    table.addColumn("max");
+    table.addColumn("rms");
+    table.addColumn("factor");
+
+    for(int i = 0; i < bands; i++) {
+      rmsFactor = sqrt(rmsSpectrum[i]/rmsSamples);
+      TableRow newRow = table.addRow();
+      newRow.setInt("band", i);
+      newRow.setFloat("max", maxSpectrum[i]);
+      newRow.setFloat("rms", rmsFactor);
+      newRow.setFloat("factor", 1/rmsFactor);
+    }
+    saveTable(table, "data/"+getNormalizeFilename());
+    println("Saved analyse");
+  }
+
+  String getNormalizeFilename() {
+    return "fft_analyze_"+bands+".csv";
   }
 
 }
+
+
+
+// class Shape {
+//   float volume;
+//   int hue;
+//   float centerX, centerY, size;
+//   float goalX, goalY, speedX,speedY;
+//   float[] x = new float[formResolution];
+//   float[] y = new float[formResolution];
+
+//   Shape(int c) {
+//     volume = 0.0;
+//     hue = int(random(360));
+//     centerX = width/2;
+//     centerY = height/2;
+//     size = 0;
+//     float angle = radians(360/float(formResolution));
+//     for (int i=0; i<formResolution; i++){
+//       x[i] = cos(angle*i) * speedScale(size);
+//       y[i] = sin(angle*i) * speedScale(size);
+//     }
+//     newGoal();
+//   }
+
+//   void newGoal() {
+//     goalX = random(-width,width*2);
+//     goalY = random(-width,width*2);
+//     speedX = (goalX - centerX) / 10000;
+//     speedY = (goalY - centerY) / 10000;
+//   }
+
+//   void setVolume(float set_volume) {
+//     volume = set_volume;
+//   }
+
+//   void calcNewPosition() {
+//     if (size>=0) {
+//       centerX += speedScale(speedX);
+//       centerY += speedScale(speedY);
+//       speedX *= 1.01;
+//       speedY *= 1.01;
+//       size = abs(width/2 - centerX) / 300;
+
+//       for (int i=0; i<formResolution; i++){
+//         float step = stepSize * volume;
+//         x[i] += random(-step,step);
+//         y[i] += random(-step,step);
+//       }
+
+//       if ( size>width || (centerX < -size || centerX > width+size) && (centerY < -size || centerY > height+size ) ) {
+//         centerX = width/2;
+//         centerY = height/2;
+//         size = 1;
+//         newGoal();
+
+//         // If near ending - don't draw anymore...
+//         int now = millis();
+//         float time = now - startTime;
+//         float scale = 1;
+//         if ( time > (soundDuration*1000-fadeInTime) ) {
+//           size = -1;
+//         }
+//       }
+//     }
+//   }
+
+//   void draw() {
+//     if (size>=0) {
+//       strokeWeight( 1+ size/50 * volume * 2);
+//       stroke( hue-int(volume*30), 50+75*volume, size/2+25*volume, 30 + size/3);
+//       fill( hue-int(volume*30), 50+50*volume, size+70*volume, 55 + size/3);
+//       //noFill();
+
+//       //for (int i=0; i<formResolution; i++){
+//       //  line(centerX,centerY, scale(x[i])+centerX, scale(y[i])+centerY);
+//       //}
+
+//       // start controlpoint
+//       beginShape();
+//       curveVertex( scale(x[formResolution-1])+centerX, scale(y[formResolution-1])+centerY);
+//       for (int i=0; i<formResolution; i++){
+//         curveVertex(scale(x[i])+centerX, scale(y[i])+centerY);
+//       }
+//       curveVertex( scale(x[0])+centerX, scale(y[0])+centerY);
+//       // end controlpoint
+//       curveVertex( scale(x[1])+centerX, scale(y[1])+centerY);
+//       endShape();
+//     }
+//   }
+
+//   float speedScale(float speed) {
+//     int now = millis();
+//     float time = now - startTime;
+//     float scale = 1;
+//     if (time < fadeInTime) {
+//       scale = time / fadeInTime;
+//     }
+//     if ( time > (soundDuration*1000-fadeInTime) ) {
+//       scale = (soundDuration*1000 - time) / fadeInTime;
+//     }
+//     return speed * scale;
+//   }
+
+//   float scale(float pos) {
+//     float scale = size;
+//     return pos * scale;
+//   }
+
+// }
