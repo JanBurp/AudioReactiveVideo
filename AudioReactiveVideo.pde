@@ -32,9 +32,11 @@ int playTime = 0;
 
 
 // Audio
+import ddf.minim.analysis.*;
 import ddf.minim.*;
 Minim minim;
 AudioPlayer player;
+FFT         fft;
 
 // import processing.sound.*;
 // SoundFile sample;
@@ -77,7 +79,8 @@ public void setup() {
   minim = new Minim(this);
   player = minim.loadFile( audioFile );
   player.play();
-
+  // FFT
+  fft = new FFT( player.bufferSize(), player.sampleRate() );
 
 
   // sample = new SoundFile(this, audioFile);
@@ -99,6 +102,10 @@ public void draw() {
 
   stroke(255,255,255);
   drawWaveformsRect(0,0,width,height);
+
+  // stroke(255,0,0);
+  // fill(255,0,0);
+  drawEqualizer(0,height,width,height);
 
   if (debug) {
     drawDebugBar();
@@ -128,7 +135,7 @@ public void draw() {
 void drawDebugBar() {
   int barHeight = 50;
   noStroke();
-  fill(0,0,0);
+  fill(0,0,0,50);
   rect(0,0,width,barHeight);
   fill(0,255,0);
   text( audioFile + " - " + timeFormat(player.position()) + " / " + timeFormat(player.length()), 10, barHeight/2 );
@@ -154,6 +161,19 @@ void drawWaveformsRect(int x, int y, int w, int h) {
     float x2 = map( i+1, 0, player.bufferSize(), x, w );
     line( x1, y1 + player.left.get(i)*yh, x2, y1 + player.left.get(i+1)*yh );
     line( x1, y2 + player.right.get(i)*yh, x2, y2 + player.right.get(i+1)*yh );
+  }
+}
+
+void drawEqualizer(int x, int y, int w, int h) {
+  stroke(255,0,0);
+
+  fft.forward( player.mix );
+  int bands = fft.specSize();
+  float bandW = float(w) / float(bands);
+  for(int i = 0; i < bands; i++)
+  {
+    int lineX = int(x + i * bandW);
+    line( lineX, y, lineX, y - h * fft.getBand(i) );
   }
 }
 
