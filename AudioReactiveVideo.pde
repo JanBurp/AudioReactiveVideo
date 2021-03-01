@@ -37,19 +37,11 @@ import ddf.minim.*;
 Minim minim;
 AudioPlayer player;
 FFT         fft;
-
-// import processing.sound.*;
-// SoundFile sample;
-// int soundDuration = 0;
-
-// Amplitude amplitude;
-// FFT fft;
-// int bands = 16; // power of 2
-// AudioAnalyzer analyzer;
+AudioAnalyzer analyzer;
 
 // Visuals
 float smoothingFactorUp = 0.8;
-float smoothingFactorDown = 0.02;
+float smoothingFactorDown = 0.1;
 
 // // Shapes
 // int nrOfShapes = 50;
@@ -79,17 +71,9 @@ public void setup() {
   minim = new Minim(this);
   player = minim.loadFile( audioFile );
   player.play();
-  // FFT
-  fft = new FFT( player.bufferSize(), player.sampleRate() );
 
-
-  // sample = new SoundFile(this, audioFile);
-  // soundDuration = int(sample.duration() * 1000);
-  // sample.play();
-
-  // amplitude = new Amplitude(this);
-  // fft = new FFT(this, bands);
-  // analyzer = new AudioAnalyzer(sample);
+  // Analyzer
+  analyzer = new AudioAnalyzer();
 
   // startTime = millis();
   // endTime = startTime + soundDuration;
@@ -98,36 +82,29 @@ public void setup() {
 
 
 public void draw() {
+  analyzer.analyze();
+
   background(backgroundColor);
-
   stroke(255,255,255);
-  drawWaveformsRect(0,0,width,height);
 
-  // stroke(255,0,0);
-  // fill(255,0,0);
-  drawEqualizer(0,height,width,height);
-
-  if (debug) {
-    drawDebugBar();
-  }
+  analyzer.drawWaveformsRect(0,0,width,height);
+  analyzer.drawEqualizer(0,height,width,height);
 
   // Time
   // playTime = millis() - startTime;
   //println(playTime);
 
-  // Analyse Audio
-  // analyzer.analyze();
 
-  // if (analyzer.isNormalizing()) {
-  //   analyzer.drawBands();
-  // }
-  // else {
-  //   analyzer.drawEqualizer();
-  // }
 
-  // END - save fft analyzer
+  if (debug) {
+    drawDebugBar();
+  }
+
+  // END - save fft analyzer & EXIT
   if ( player.position() >= player.length() ) {
-    // analyzer.saveNormalizeData();
+    if (analyzer.isNormalizing()) {
+      analyzer.saveNormalizeData();
+    }
     exit();
   }
 }
@@ -139,42 +116,18 @@ void drawDebugBar() {
   rect(0,0,width,barHeight);
   fill(0,255,0);
   text( audioFile + " - " + timeFormat(player.position()) + " / " + timeFormat(player.length()), 10, barHeight/2 );
+
+  if (analyzer.isNormalizing()) {
+    text( "ANALYZING", width/2, barHeight/2 );
+  }
+
   // draw a line to show where in the song playback is currently located
   float posx = map(player.position(), 0, player.length(), 0, width);
   stroke(255,0,0);
   line(posx, 0, posx, barHeight);
   stroke(255,255,255);
-  drawWaveformsRect(0,0,width,barHeight);
-}
 
-void drawWaveformsRect(int x, int y, int w, int h) {
-  // draw the waveforms
-  // the values returned by left.get() and right.get() will be between -1 and 1,
-  // so we need to scale them up to see the waveform
-  // note that if the file is MONO, left.get() and right.get() will return the same value
-  int y1 = y + h/4;
-  int y2 = y + h*3/4;
-  int yh = h/2;
-  for(int i = 0; i < player.bufferSize() - 1; i++)
-  {
-    float x1 = map( i, 0, player.bufferSize(), x, w );
-    float x2 = map( i+1, 0, player.bufferSize(), x, w );
-    line( x1, y1 + player.left.get(i)*yh, x2, y1 + player.left.get(i+1)*yh );
-    line( x1, y2 + player.right.get(i)*yh, x2, y2 + player.right.get(i+1)*yh );
-  }
-}
-
-void drawEqualizer(int x, int y, int w, int h) {
-  stroke(255,0,0);
-
-  fft.forward( player.mix );
-  int bands = fft.specSize();
-  float bandW = float(w) / float(bands);
-  for(int i = 0; i < bands; i++)
-  {
-    int lineX = int(x + i * bandW);
-    line( lineX, y, lineX, y - h * fft.getBand(i) );
-  }
+  analyzer.drawWaveformsRect(0,0,width,barHeight);
 }
 
 void keyPressed()
@@ -232,134 +185,190 @@ String intFormat(int value, int length, String ch) {
 // =============
 
 
-// class AudioAnalyzer {
+class AudioAnalyzer {
 
-//   SoundFile sample;
-//   float volume;
-//   float[] volumeSpectrum = new float[bands]; //<>//
-//   float[] smoothSpectrum = new float[bands];
-//   float[] maxSpectrum = new float[bands];
-//   float[] rmsSpectrum = new float[bands];
-//   long rmsSamples = 0;
-//   float[] normalizedFactor = new float[bands];
-//   boolean isNormalizing = false;
+  int bands = 0;
+  float volume = 0.0;
+  float smoothVolume = 0.0;
+  float[] volumeSpectrum;
+  float[] smoothSpectrum;
+  float[] maxSpectrum;
+  float[] rmsSpectrum;
+  float[] normalizedFactor;
+  float[] maxedFactor;
+  long rmsSamples = 0;
+  boolean isNormalizing = false;
 
-//   AudioAnalyzer(SoundFile sound) {
-//     sample = sound;
-//     amplitude.input(sample);
-//     fft.input(sample);
-//     for(int i = 0; i < bands; i++){
-//      smoothSpectrum[i] = 0.0;
-//      maxSpectrum[i] = 0.0;
-//      rmsSpectrum[i] = 0.0;
-//      normalizedFactor[i] = 1.0;
-//     }
-//     loadNormalizeData();
-//   }
+  AudioAnalyzer() {
+    fft = new FFT( player.bufferSize(), player.sampleRate() );
+    fft.logAverages( 33, 1 );
+    bands = fft.avgSize();
 
-//   void analyze() {
-//     volume = amplitude.analyze();
-//     fft.analyze(volumeSpectrum);
-//     for(int i = 0; i < bands; i++){
-//       // analyze
-//       if (volumeSpectrum[i] > maxSpectrum[i]) { maxSpectrum[i]=volumeSpectrum[i]; }
-//       rmsSpectrum[i] += volumeSpectrum[i] * volumeSpectrum[i];
-//       rmsSamples++;
-//       // map
-//       volumeSpectrum[i] = volumeSpectrum[i] * normalizedFactor[i];
-//       if (volumeSpectrum[i]>smoothSpectrum[i]) {
-//         smoothSpectrum[i] += (volumeSpectrum[i] - smoothSpectrum[i]) * smoothingFactorUp;
-//       }
-//       else {
-//         smoothSpectrum[i] += (volumeSpectrum[i] - smoothSpectrum[i]) * smoothingFactorDown;
-//       }
-//     }
-//   }
+    volumeSpectrum = new float[bands];
+    smoothSpectrum = new float[bands];
+    maxSpectrum = new float[bands];
+    rmsSpectrum = new float[bands];
+    maxedFactor = new float[bands];
+    normalizedFactor = new float[bands];
 
-//   boolean isNormalizing() {
-//     return isNormalizing;
-//   }
+    for(int i = 0; i < bands; i++){
+     smoothSpectrum[i] = 0.0;
+     maxSpectrum[i] = 0.0;
+     rmsSpectrum[i] = 0.0;
+     maxedFactor[i] = 1.0;
+     normalizedFactor[i] = 1.0;
+    }
 
-//   void drawBands() {
-//     background(0,0,0);
-//     textSize(32);
-//     text("Analyzing "+bands+" FFT bands of `"+audioFile+"'.", 10, 30);
-//     drawEqualizer();
-//   }
+    loadNormalizeData();
+  }
 
-//   void drawEqualizer() {
-//     int padding = 10;
-//     int barW = width / bands - padding * 2;
-//     fill(255,0,0);
-//     stroke(0,0,0);
-//     for(int i = 0; i < bands; i++) {
-//       rect( i*barW + padding , height + padding, barW - padding, height - padding - getSpectrumBandSmooth(i) * (height-padding) * 2 );
-//     }
-//   }
+  void analyze() {
+    volume = player.mix.level();
+    // Smoothing
+    if (volume>smoothVolume) {
+      smoothVolume += (volume - smoothVolume) * smoothingFactorUp;
+    }
+    else {
+      smoothVolume += (volume - smoothVolume) * smoothingFactorDown;
+    }
 
-//   float getVolume() {
-//     return volume;
-//   }
+    // FFT
+    fft.forward( player.mix );
+    for(int i = 0; i < bands; i++){
+      volumeSpectrum[i] = fft.getAvg(i);
 
-//   float getVolumeSmooth() {
-//     return volume;
-//   }
+      // analyze
+      if (isNormalizing) {
+        if (volumeSpectrum[i] > maxSpectrum[i]) { maxSpectrum[i]=volumeSpectrum[i]; }
+        rmsSpectrum[i] += volumeSpectrum[i] * volumeSpectrum[i];
+        rmsSamples++;
+        println(rmsSamples);
+      }
+      else {
+        // Factor
+        if (volumeSpectrum[i]>=(rmsSpectrum[i]/2) ) {
+          volumeSpectrum[i] = volumeSpectrum[i] * maxedFactor[i];
+        }
+        else {
+          volumeSpectrum[i] = volumeSpectrum[i] * normalizedFactor[i];
+        }
+      }
 
-//   float getSpectrumBand(int band) {
-//     return volumeSpectrum[band];
-//   }
+      // Smoothing
+      if (volumeSpectrum[i]>smoothSpectrum[i]) {
+        smoothSpectrum[i] += (volumeSpectrum[i] - smoothSpectrum[i]) * smoothingFactorUp;
+      }
+      else {
+        smoothSpectrum[i] += (volumeSpectrum[i] - smoothSpectrum[i]) * smoothingFactorDown;
+      }
 
-//   float getSpectrumBandSmooth(int band) {
-//     return smoothSpectrum[band];
-//   }
+    }
+  }
 
-//   void loadNormalizeData() {
-//     File file = dataFile(getNormalizeFilename());
-//     isNormalizing = !file.isFile();
-//     if (!isNormalizing){
-//      Table table;
-//      table = loadTable("data/"+getNormalizeFilename(), "header");
-//      if ( table.getRowCount() > 0 ) {
-//        println(table.getRowCount() + " total rows in table");
+  boolean isNormalizing() {
+    return isNormalizing;
+  }
 
-//        for (TableRow row : table.rows()) {
-//          int band = row.getInt("band");
-//          float factor = row.getFloat("factor");
-//          normalizedFactor[band] = factor;
-//          // println("Band ",band," => ",normalizedFactor[band]);
-//        }
-//      }
-//     }
-//     else {
-//       println("No normalize data => Analyzing now...");
-//     }
-//   }
+  void drawEqualizer(int x, int y, int w, int h) {
+    stroke(255,0,0);
 
-//   void saveNormalizeData() {
-//     float rmsFactor = 0.0;
-//     Table table = new Table();
-//     table.addColumn("band");
-//     table.addColumn("max");
-//     table.addColumn("rms");
-//     table.addColumn("factor");
+    int bandwidth = width/bands;
+    for(int i = 0; i < bands; i++)
+    {
+      noFill();
+      stroke(0,0,0);
+      rect( i*bandwidth, 0, bandwidth, height);
 
-//     for(int i = 0; i < bands; i++) {
-//       rmsFactor = sqrt(rmsSpectrum[i]/rmsSamples);
-//       TableRow newRow = table.addRow();
-//       newRow.setInt("band", i);
-//       newRow.setFloat("max", maxSpectrum[i]);
-//       newRow.setFloat("rms", rmsFactor);
-//       newRow.setFloat("factor", 1/rmsFactor);
-//     }
-//     saveTable(table, "data/"+getNormalizeFilename());
-//     println("Saved analyse");
-//   }
+      fill(255,0,0);
+      rect( i*bandwidth, height, bandwidth, -height * smoothSpectrum[i] );
 
-//   String getNormalizeFilename() {
-//     return "fft_analyze_"+bands+".csv";
-//   }
+      // fill(0,255,0);
+      // text( i+" - "+ round(smoothSpectrum[i]*100), i*bandwidth, height-20 );
+    }
+  }
 
-// }
+  void drawWaveformsRect(int x, int y, int w, int h) {
+    // draw the waveforms
+    // the values returned by left.get() and right.get() will be between -1 and 1,
+    // so we need to scale them up to see the waveform
+    // note that if the file is MONO, left.get() and right.get() will return the same value
+    int y1 = y + h/4;
+    int y2 = y + h*3/4;
+    int yh = h/2;
+    for(int i = 0; i < player.bufferSize() - 1; i++)
+    {
+      float x1 = map( i, 0, player.bufferSize(), x, w );
+      float x2 = map( i+1, 0, player.bufferSize(), x, w );
+      line( x1, y1 + player.left.get(i)*yh, x2, y1 + player.left.get(i+1)*yh );
+      line( x1, y2 + player.right.get(i)*yh, x2, y2 + player.right.get(i+1)*yh );
+    }
+  }
+
+
+  float getVolume() {
+    return volume;
+  }
+
+  float getVolumeSmooth() {
+    return smoothVolume;
+  }
+
+  float getSpectrumBand(int band) {
+    return volumeSpectrum[band];
+  }
+
+  float getSpectrumBandSmooth(int band) {
+    return smoothSpectrum[band];
+  }
+
+  void loadNormalizeData() {
+    File file = dataFile(getNormalizeFilename());
+    isNormalizing = !file.isFile();
+    if (!isNormalizing){
+     Table table;
+     table = loadTable("data/"+getNormalizeFilename(), "header");
+     if ( table.getRowCount() > 0 ) {
+       println(table.getRowCount() + " total rows in table");
+
+       for (TableRow row : table.rows()) {
+         int band = row.getInt("band");
+         float max = row.getFloat("max");
+         float rms = row.getFloat("rms");
+         rmsSpectrum[band] = rms;
+         maxedFactor[band] = 1/max;
+         normalizedFactor[band] = 1/rms;
+         println("Band ",band," => ",max,rmsSpectrum[band],normalizedFactor[band],maxedFactor[band]);
+       }
+     }
+    }
+    else {
+      println("No normalize data => Analyzing now...");
+    }
+  }
+
+  void saveNormalizeData() {
+    float rmsFactor = 0.0;
+    Table table = new Table();
+    table.addColumn("band");
+    table.addColumn("max");
+    table.addColumn("rms");
+
+    for(int i = 0; i < bands; i++) {
+      rmsFactor = sqrt(rmsSpectrum[i]/rmsSamples);
+      TableRow newRow = table.addRow();
+      newRow.setInt("band", i);
+      newRow.setFloat("max", maxSpectrum[i]);
+      newRow.setFloat("rms", rmsFactor);
+    }
+    saveTable(table, "data/"+getNormalizeFilename());
+    println("Saved analyse");
+  }
+
+  String getNormalizeFilename() {
+    return "fft_analyze_"+bands+".csv";
+  }
+
+}
 
 
 
