@@ -4,3 +4,4 @@
 /build-tmp
 *.wav
 *.autosave
+data/*.csv
