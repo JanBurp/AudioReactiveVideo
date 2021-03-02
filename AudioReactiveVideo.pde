@@ -3,13 +3,13 @@
   (c) Jan den Besten
  */
 
-boolean debug = true;
+boolean debug = false;
 
 // Put you're audio file in the 'data' folder and fill in the name:
-String audioFile = "Zaagstof-drang-kort.wav";
+String audioFile = "Zaagstof-drang.wav";
 
 // Basic colors
-color backgroundColor = color(128,64,128);
+color backgroundColor = color(220,220,220);
 
 // Timing
 int fadeInTime = 30000;
@@ -19,8 +19,10 @@ int fadeOutTime = 30000;
 
 
 // Objects
-
-
+CircleWave ampCircles[];
+LineWave lines[];
+int nrOflines = 100;
+int currentLine = 0;
 
 
 // =========== DON'T CHANGE ANYTHING UNDER THIS LINE (or know what you do) =========== //
@@ -37,21 +39,11 @@ import ddf.minim.*;
 Minim minim;
 AudioPlayer player;
 FFT         fft;
+BeatDetect  beat;
 AudioAnalyzer analyzer;
 
-// Visuals
 float smoothingFactorUp = 0.8;
 float smoothingFactorDown = 0.1;
-
-// // Shapes
-// int nrOfShapes = 50;
-// Shape[] shapes;
-
-// int formResolution = 3;
-// int stepSize = 10;
-// float speed = 1.5;
-// float initRadius = 70;
-
 
 
 /*
@@ -60,9 +52,9 @@ float smoothingFactorDown = 0.1;
 
 */
 public void setup() {
-  // fullScreen(P2D);
-  size(1280,720,P2D);
-  // pixelDensity(2);
+  // size(1280,720,P2D);
+  fullScreen(P2D);
+  pixelDensity(2);
   background(backgroundColor);
 
   randomSeed(1);
@@ -74,28 +66,55 @@ public void setup() {
 
   // Analyzer
   analyzer = new AudioAnalyzer();
+  beat = new BeatDetect(player.bufferSize(), player.sampleRate());
+  beat.setSensitivity(300);
 
-  // startTime = millis();
-  // endTime = startTime + soundDuration;
-  // println("Start - End",startTime,endTime,soundDuration);
+  // Graphics
+  ampCircles = new CircleWave[3];
+  ampCircles[0] = new CircleWave(width/4,height/2,height/2,-1);
+  ampCircles[1] = new CircleWave(width/2,height/2,height/2,0);
+  ampCircles[2] = new CircleWave(width/4*3,height/2,height/2,1);
+
+  // lines = new LineWave[nrOflines];
+  // for(int i = 0; i < nrOflines; i++) {
+  //   lines[i] = new LineWave();
+  // }
 }
 
 
 public void draw() {
   analyzer.analyze();
 
-  background(backgroundColor);
-  stroke(255,255,255);
+  beat.detect(player.mix);
 
-  analyzer.drawWaveformsRect(0,0,width,height);
-  analyzer.drawEqualizer(0,height,width,height);
+  if (beat.isKick()) {
+    ampCircles[0].move();
+  }
+  if (beat.isHat()) {
+    ampCircles[1].move();
+  }
+  if (beat.isSnare()) {
+    ampCircles[2].move();
+  }
 
-  // Time
-  // playTime = millis() - startTime;
-  //println(playTime);
+  // background(backgroundColor);
+  // stroke(255,255,255);
 
+  // analyzer.drawWaveformsRect(0,0,width,height);
+  // analyzer.drawEqualizer(0,height,width,height);
 
+  // Graphics
+  ampCircles[0].draw();
+  ampCircles[1].draw();
+  ampCircles[2].draw();
 
+  // lines[currentLine].draw();
+  // currentLine++;
+  // if (currentLine>=nrOflines) {
+  //   currentLine = 0;
+  // }
+
+  // DEBUG
   if (debug) {
     drawDebugBar();
   }
@@ -368,6 +387,124 @@ class AudioAnalyzer {
     return "fft_analyze_"+bands+".csv";
   }
 
+}
+
+
+class CircleWave {
+
+  int x, y, size, leftOrRight;
+
+  CircleWave(int x, int y,int size,int leftOrRight) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+    this.leftOrRight = leftOrRight;
+  }
+
+  void move() {
+    int max = size/4;
+    int xPlus = int(random(-max,max));
+    if (x>width) {
+      xPlus = int(random(-max,0));
+    }
+    if (x<0) {
+      xPlus = int(random(0,max));
+    }
+    x += xPlus;
+    int yPlus = int(random(-max,max));
+    if (y>height) {
+      yPlus = int(random(-max,0));
+    }
+    if (y<0) {
+      yPlus = int(random(0,max));
+    }
+    y += yPlus;
+  }
+
+  void draw() {
+    int steps = player.bufferSize() - 1;
+    float angleStep = 2*PI / steps;
+    int[] xc = new int[steps];
+    int[] yc = new int[steps];
+
+    for(int i = 0; i < steps; i++)
+    {
+      float volume = 0.0;
+      if (leftOrRight<0) {
+        volume = player.left.get(i);
+      }
+      if (leftOrRight==0) {
+        volume = player.mix.get(i);
+      }
+      if (leftOrRight>0) {
+        volume = player.right.get(i);
+      }
+      float angle = angleStep * i;
+      float radius = size * abs(volume*2);
+      xc[i] = int(x + sin(angle) * radius);
+      yc[i] = int(y + cos(angle) * radius);
+    }
+
+
+    if (leftOrRight<0) {
+      stroke(110,0,0,10);
+      fill(220,0,0,10);
+    }
+    if (leftOrRight==0) {
+      stroke(110,110,0,10);
+      fill(220,220,0,10);
+    }
+    if (leftOrRight>0) {
+      stroke(0,0,110,10);
+      fill(0,0,220,10);
+    }
+    beginShape();
+    for(int i = 0; i < steps; i++) {
+      // line( xc[i-1],yc[i-1], xc[i],yc[i]);
+      vertex( xc[i],yc[i] );
+    }
+    endShape();
+
+  }
+
+}
+
+
+class LineWave {
+
+  int steps;
+  float[] points;
+  int y = height/2;
+  int yDiff = 50;
+  int ySpeed = 5;
+
+  LineWave() {
+    steps = player.bufferSize() - 1;
+    points = new float[steps];
+    calcPoints();
+  }
+
+  void calcPoints() {
+    for(int i = 0; i < steps; i++)
+    {
+      points[i] = player.mix.get(i);
+    }
+  }
+
+  void draw() {
+    stroke(0,0,0);
+    for(int i = 1; i < steps; i++)
+    {
+      float x1 = map( i, 0, steps, 0, width );
+      float x2 = map( i+1, 0, steps, 0, width );
+      line( x1, y - points[i-1]*yDiff, x2, y - points[i]*yDiff );
+    }
+    y += ySpeed;
+    if (y > height) {
+      y = height/2;
+      calcPoints();
+    }
+  }
 }
 
 
