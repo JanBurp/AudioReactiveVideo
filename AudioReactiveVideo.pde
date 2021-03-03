@@ -6,7 +6,7 @@
 boolean debug = false;
 
 // Put you're audio file in the 'data' folder and fill in the name:
-String audioFile = "Zaagstof-drang.wav";
+String audioFile = "test.wav";
 
 // Basic colors
 color backgroundColor = color(220,220,220);

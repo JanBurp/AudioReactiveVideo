@@ -16,7 +16,7 @@ With the musical project 'Zaagstof', a dutch impro collective, we publish roughl
 You can see examples on the YouTube playlist of 'Zaagstof': https://www.youtube.com/playlist?list=PLRnF3ON_bf27HfI0NtnziLUvLfZki-_H4
 
 ### Releases
-- v3.0.0 - Pollock Machine
+- v3.0.0 - Pollock Machine - Total rewrite, using mimin library, more analyses and preparing for scenes and more
 - v2.4.0 - Journey into shapes
 - v2.3.0 - Airy Shapes v2
 - v2.2.0 - Airy Shapes.
