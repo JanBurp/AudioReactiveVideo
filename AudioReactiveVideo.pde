@@ -11,27 +11,23 @@ String audioFile = "Zaagstof-drang.wav";
 // Basic colors
 color backgroundColor = color(220,220,220);
 
-// Timing
-int fadeInTime = 30000;
-int fadeOutTime = 30000;
-
-// Scenes
-
+// Timing (milliseconds)
+int outTroTime  = 12000;
+int fadeOutTime = 5000;
+//
+int outTroStartTime = -1;
 
 // Objects
 CircleWave ampCircles[];
-LineWave lines[];
-int nrOflines = 100;
-int currentLine = 0;
+// LineWave lines[];
+// int nrOflines = 100;
+// int currentLine = 0;
 
 
 // =========== DON'T CHANGE ANYTHING UNDER THIS LINE (or know what you do) =========== //
 
 // Time
 int startTime = millis();
-int endTime = 0; // will be startTime + duration of soundfile
-int playTime = 0;
-
 
 // Audio
 import ddf.minim.analysis.*;
@@ -79,6 +75,8 @@ public void setup() {
   // for(int i = 0; i < nrOflines; i++) {
   //   lines[i] = new LineWave();
   // }
+
+  startTime = millis();
 }
 
 
@@ -108,11 +106,11 @@ public void draw() {
   ampCircles[1].draw();
   ampCircles[2].draw();
 
-  // lines[currentLine].draw();
-  // currentLine++;
-  // if (currentLine>=nrOflines) {
-  //   currentLine = 0;
-  // }
+
+  // Time
+  if ( (player.length()-player.position()) <= outTroTime ) {
+    outTro();
+  }
 
   // DEBUG
   if (debug) {
@@ -121,10 +119,15 @@ public void draw() {
 
   // END - save fft analyzer & EXIT
   if ( player.position() >= player.length() ) {
-    if (analyzer.isNormalizing()) {
-      analyzer.saveNormalizeData();
+    if (outTroStartTime<0) {
+      outTroStartTime = millis();
     }
-    exit();
+    if (fadeOut()) {
+      if (analyzer.isNormalizing()) {
+        analyzer.saveNormalizeData();
+      }
+      exit();
+    }
   }
 }
 
@@ -134,6 +137,7 @@ void drawDebugBar() {
   fill(0,0,0,50);
   rect(0,0,width,barHeight);
   fill(0,255,0);
+  textSize(12);
   text( audioFile + " - " + timeFormat(player.position()) + " / " + timeFormat(player.length()), 10, barHeight/2 );
 
   if (analyzer.isNormalizing()) {
@@ -200,6 +204,30 @@ String intFormat(int value, int length, String ch) {
   return format + value;
 }
 
+
+void outTro() {
+  PFont font;
+  font = createFont("Lucida Sans Unicode.ttf", 70, true);
+  textFont(font);
+  textAlign(CENTER);
+  int sceneTime = outTroTime - (player.length() - player.position());
+  float opacity = float(sceneTime) / float(outTroTime) * 100;
+  fill(220,220,220, opacity);
+  text( "Music: Zaagstof", width/2, height/2 - 100);
+  text( "Visuals: Jan den Besten", width/2, height/2 + 100 );
+}
+
+boolean fadeOut() {
+  int sceneTime = millis() - outTroStartTime;
+  if (sceneTime > fadeOutTime) {
+    return true;
+  }
+  float amount = float(sceneTime) / float(fadeOutTime) * 100;
+  fill(100,100,100,amount);
+  noStroke();
+  rect(0,0,width, height);
+  return false;
+}
 
 // =============
 
@@ -300,17 +328,10 @@ class AudioAnalyzer {
 
       fill(255,0,0);
       rect( i*bandwidth, height, bandwidth, -height * smoothSpectrum[i] );
-
-      // fill(0,255,0);
-      // text( i+" - "+ round(smoothSpectrum[i]*100), i*bandwidth, height-20 );
     }
   }
 
   void drawWaveformsRect(int x, int y, int w, int h) {
-    // draw the waveforms
-    // the values returned by left.get() and right.get() will be between -1 and 1,
-    // so we need to scale them up to see the waveform
-    // note that if the file is MONO, left.get() and right.get() will return the same value
     int y1 = y + h/4;
     int y2 = y + h*3/4;
     int yh = h/2;
@@ -356,7 +377,7 @@ class AudioAnalyzer {
          rmsSpectrum[band] = rms;
          maxedFactor[band] = 1/max;
          normalizedFactor[band] = 1/rms;
-         println("Band ",band," => ",max,rmsSpectrum[band],normalizedFactor[band],maxedFactor[band]);
+         // println("Band ",band," => ",max,rmsSpectrum[band],normalizedFactor[band],maxedFactor[band]);
        }
      }
     }
@@ -390,6 +411,9 @@ class AudioAnalyzer {
 }
 
 
+
+
+
 class CircleWave {
 
   int x, y, size, leftOrRight;
@@ -404,21 +428,21 @@ class CircleWave {
   void move() {
     int max = size/4;
     int xPlus = int(random(-max,max));
-    if (x>width) {
-      xPlus = int(random(-max,0));
-    }
-    if (x<0) {
-      xPlus = int(random(0,max));
-    }
     x += xPlus;
+    while (x>width) {
+      x -= width;
+    }
+    while ( x<0 ) {
+      x += width;
+    }
     int yPlus = int(random(-max,max));
-    if (y>height) {
-      yPlus = int(random(-max,0));
-    }
-    if (y<0) {
-      yPlus = int(random(0,max));
-    }
     y += yPlus;
+    while (y>height) {
+      y -= height;
+    }
+    while ( y<0 ) {
+      y += height;
+    }
   }
 
   void draw() {
@@ -447,20 +471,19 @@ class CircleWave {
 
 
     if (leftOrRight<0) {
-      stroke(110,0,0,10);
-      fill(220,0,0,10);
+      stroke(110,55,55,20);
+      fill(220,0,0,7);
     }
     if (leftOrRight==0) {
-      stroke(110,110,0,10);
-      fill(220,220,0,10);
+      stroke(110,110,55,20);
+      fill(220,220,0,7);
     }
     if (leftOrRight>0) {
-      stroke(0,0,110,10);
-      fill(0,0,220,10);
+      stroke(55,55,110,20);
+      fill(0,0,220,7);
     }
     beginShape();
     for(int i = 0; i < steps; i++) {
-      // line( xc[i-1],yc[i-1], xc[i],yc[i]);
       vertex( xc[i],yc[i] );
     }
     endShape();
@@ -470,149 +493,41 @@ class CircleWave {
 }
 
 
-class LineWave {
+// class LineWave {
 
-  int steps;
-  float[] points;
-  int y = height/2;
-  int yDiff = 50;
-  int ySpeed = 5;
+//   int steps;
+//   float[] points;
+//   int y = height/2;
+//   int yDiff = 50;
+//   int ySpeed = 5;
 
-  LineWave() {
-    steps = player.bufferSize() - 1;
-    points = new float[steps];
-    calcPoints();
-  }
-
-  void calcPoints() {
-    for(int i = 0; i < steps; i++)
-    {
-      points[i] = player.mix.get(i);
-    }
-  }
-
-  void draw() {
-    stroke(0,0,0);
-    for(int i = 1; i < steps; i++)
-    {
-      float x1 = map( i, 0, steps, 0, width );
-      float x2 = map( i+1, 0, steps, 0, width );
-      line( x1, y - points[i-1]*yDiff, x2, y - points[i]*yDiff );
-    }
-    y += ySpeed;
-    if (y > height) {
-      y = height/2;
-      calcPoints();
-    }
-  }
-}
-
-
-
-// class Shape {
-//   float volume;
-//   int hue;
-//   float centerX, centerY, size;
-//   float goalX, goalY, speedX,speedY;
-//   float[] x = new float[formResolution];
-//   float[] y = new float[formResolution];
-
-//   Shape(int c) {
-//     volume = 0.0;
-//     hue = int(random(360));
-//     centerX = width/2;
-//     centerY = height/2;
-//     size = 0;
-//     float angle = radians(360/float(formResolution));
-//     for (int i=0; i<formResolution; i++){
-//       x[i] = cos(angle*i) * speedScale(size);
-//       y[i] = sin(angle*i) * speedScale(size);
-//     }
-//     newGoal();
+//   LineWave() {
+//     steps = player.bufferSize() - 1;
+//     points = new float[steps];
+//     calcPoints();
 //   }
 
-//   void newGoal() {
-//     goalX = random(-width,width*2);
-//     goalY = random(-width,width*2);
-//     speedX = (goalX - centerX) / 10000;
-//     speedY = (goalY - centerY) / 10000;
-//   }
-
-//   void setVolume(float set_volume) {
-//     volume = set_volume;
-//   }
-
-//   void calcNewPosition() {
-//     if (size>=0) {
-//       centerX += speedScale(speedX);
-//       centerY += speedScale(speedY);
-//       speedX *= 1.01;
-//       speedY *= 1.01;
-//       size = abs(width/2 - centerX) / 300;
-
-//       for (int i=0; i<formResolution; i++){
-//         float step = stepSize * volume;
-//         x[i] += random(-step,step);
-//         y[i] += random(-step,step);
-//       }
-
-//       if ( size>width || (centerX < -size || centerX > width+size) && (centerY < -size || centerY > height+size ) ) {
-//         centerX = width/2;
-//         centerY = height/2;
-//         size = 1;
-//         newGoal();
-
-//         // If near ending - don't draw anymore...
-//         int now = millis();
-//         float time = now - startTime;
-//         float scale = 1;
-//         if ( time > (soundDuration*1000-fadeInTime) ) {
-//           size = -1;
-//         }
-//       }
+//   void calcPoints() {
+//     for(int i = 0; i < steps; i++)
+//     {
+//       points[i] = player.mix.get(i);
 //     }
 //   }
 
 //   void draw() {
-//     if (size>=0) {
-//       strokeWeight( 1+ size/50 * volume * 2);
-//       stroke( hue-int(volume*30), 50+75*volume, size/2+25*volume, 30 + size/3);
-//       fill( hue-int(volume*30), 50+50*volume, size+70*volume, 55 + size/3);
-//       //noFill();
-
-//       //for (int i=0; i<formResolution; i++){
-//       //  line(centerX,centerY, scale(x[i])+centerX, scale(y[i])+centerY);
-//       //}
-
-//       // start controlpoint
-//       beginShape();
-//       curveVertex( scale(x[formResolution-1])+centerX, scale(y[formResolution-1])+centerY);
-//       for (int i=0; i<formResolution; i++){
-//         curveVertex(scale(x[i])+centerX, scale(y[i])+centerY);
-//       }
-//       curveVertex( scale(x[0])+centerX, scale(y[0])+centerY);
-//       // end controlpoint
-//       curveVertex( scale(x[1])+centerX, scale(y[1])+centerY);
-//       endShape();
+//     stroke(0,0,0);
+//     for(int i = 1; i < steps; i++)
+//     {
+//       float x1 = map( i, 0, steps, 0, width );
+//       float x2 = map( i+1, 0, steps, 0, width );
+//       line( x1, y - points[i-1]*yDiff, x2, y - points[i]*yDiff );
+//     }
+//     y += ySpeed;
+//     if (y > height) {
+//       y = height/2;
+//       calcPoints();
 //     }
 //   }
-
-//   float speedScale(float speed) {
-//     int now = millis();
-//     float time = now - startTime;
-//     float scale = 1;
-//     if (time < fadeInTime) {
-//       scale = time / fadeInTime;
-//     }
-//     if ( time > (soundDuration*1000-fadeInTime) ) {
-//       scale = (soundDuration*1000 - time) / fadeInTime;
-//     }
-//     return speed * scale;
-//   }
-
-//   float scale(float pos) {
-//     float scale = size;
-//     return pos * scale;
-//   }
-
 // }
+
+
