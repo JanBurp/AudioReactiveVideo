@@ -3,6 +3,8 @@
   (c) Jan den Besten
  */
 
+// Settings
+boolean debug = true;
 boolean doAnalyze = false;
 float smoothingFactorUp = 0.8;
 float smoothingFactorDown = 0.1;
@@ -29,7 +31,7 @@ void drawDebugBar() {
 
   // Scenes
   String activeScenes = "Scenes: ";
-  for( int s=0; s<nrOfScenes; s++) {
+  for( int s=0; s<scenes.length; s++) {
     if (scenes[s].isActive()) {
       activeScenes += scenes[s].name +"["+percentageFormat(scenes[s].durationPercentage())+"]" + ", ";
     }
@@ -113,35 +115,6 @@ String percentageFormat(float value) {
   return intFormat(int(value),2,"0") + "%";
 }
 
-
-
-void coreIntro() {
-  Scene scene = findSceneByName("coreIntro");
-  textFont(font);
-  textAlign(CENTER);
-  float opacity = 100 - scene.durationPercentage();
-  fill(110,110,110, opacity);
-  text( "Music: Zaagstof", width/2, height/2 - 100);
-  text( "Visuals: Jan den Besten", width/2, height/2 + 100 );
-}
-
-void coreOutro() {
-  Scene scene = findSceneByName("coreOutro");
-  textFont(font);
-  textAlign(CENTER);
-  float opacity = scene.durationPercentage();
-  fill(110,110,110, opacity);
-  text( "Music: Zaagstof", width/2, height/2 - 100);
-  text( "Visuals: Jan den Besten", width/2, height/2 + 100 );
-}
-
-boolean coreFadeOut() {
-  Scene scene = findSceneByName("coreFadeOut");
-  float percentage = scene.durationPercentage();
-  fill(100,100,100,percentage);
-  noStroke();
-  rect(0,0,width, height);
-}
 
 // =============
 
@@ -323,7 +296,66 @@ class AudioAnalyzer {
       }
     }
 
-
 }
 
+void setupScenes() {
+  for( int s=0; s<scenes.length; s++) {
+    scenes[s].setup();
+  }
+}
 
+void drawScenes() {
+  for( int s=0; s<scenes.length; s++) {
+    if (scenes[s].isActive()) {
+      scenes[s].draw();
+    }
+  }
+}
+
+class Scene {
+
+  String name;
+  int startTime;
+  int duration;
+
+  Scene(String name, int startTime, int duration) {
+    this.name       = name;
+    this.startTime  = startTime;
+    this.duration   = duration;
+  }
+
+  void setup() {
+    if (duration<=0) {
+      duration = player.length() - abs(duration) - startTime;
+    }
+    println( this.name,".setup ", this.startTime, "-", this.duration );
+  }
+
+  void draw() {
+    println(name,".draw()");
+  }
+
+  boolean isActive() {
+    if (startTime>=0 && timePlayed()>=startTime && timePlayed()<startTime+duration) {
+      return true;
+    }
+    if (startTime<0 && timeLeft()<=abs(startTime) && durationMillis()<duration ) {
+      return true;
+    }
+    return false;
+  }
+
+  int durationMillis() {
+    if (startTime>=0) {
+      return timePlayed() - startTime;
+    }
+    else {
+      return abs(startTime) - timeLeft();
+    }
+  }
+
+  float durationPercentage() {
+    return (float)durationMillis()*100 / (float)duration;
+  }
+
+}

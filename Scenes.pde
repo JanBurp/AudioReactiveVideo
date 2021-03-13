@@ -1,56 +1,74 @@
-/*
-  A tool to create visuals reacting on an audiofile
-  (c) Jan den Besten
- */
+// Put you're audio file in the 'data' folder and fill in the name:
+String audioFile = "No Worries - kort.wav";
 
-class Scene {
+// Declare you're scenes
+Scene scenes[] = {
+  new coreIntro(),
+  new waveFlowers(), // see waveFlowersScene.pde
+  new coreOutro(),
+  new coreFadeOut(),
+};
 
-  String name;
-  int startTime;
-  int duration;
 
-  Scene(String name, int startTime, int duration) {
-    this.name = name;
-    this.startTime = startTime;
-    this.duration = duration;
+//  Some core scenes
+
+// =========================
+
+class coreIntro extends Scene {
+  coreIntro() {
+    super("coreIntro",0,10000);
   }
 
-  boolean isActive() {
-    if (startTime>=0 && timePlayed()>=startTime && timePlayed()<startTime+duration) {
-      return true;
-    }
-    if (startTime<0 && timeLeft()<=abs(startTime) && durationMillis()<duration ) {
-      return true;
-    }
-    return false;
-  }
-
-  int durationMillis() {
-    if (startTime>=0) {
-      return timePlayed() - startTime;
-    }
-    else {
-      return abs(startTime) - timeLeft();
-    }
-  }
-
-  float durationPercentage() {
-    return (float)durationMillis()*100 / (float)duration;
+  void setup() {
+    super.setup();
   }
 
   void draw() {
-    method(name);
+    textFont(font);
+    textAlign(CENTER);
+    float opacity = 100 - durationPercentage();
+    fill(110,110,110, opacity);
+    text( "Music: Zaagstof", width/2, height/2 - 100);
+    text( "Visuals: Jan den Besten", width/2, height/2 + 100 );
   }
-
 }
 
-Scene findSceneByName(String name) {
-  int s = 0;
-  while (scenes[s].name!=name && s<nrOfScenes) {
-    s++;
+// =========================
+
+class coreOutro extends Scene {
+  coreOutro() {
+    super("coreOutro",-20000,20000);
   }
-  if (scenes[s].name==name) {
-    return scenes[s];
+
+  void setup() {
+    super.setup();
   }
-  return new Scene("false",0,0);
+
+  void draw() {
+    textFont(font);
+    textAlign(CENTER);
+    float opacity = durationPercentage();
+    fill(110,110,110, opacity);
+    text( "Music: Zaagstof", width/2, height/2 - 100);
+    text( "Visuals: Jan den Besten", width/2, height/2 + 100 );
+  }
+}
+
+// =========================
+
+class coreFadeOut extends Scene {
+  coreFadeOut() {
+    super("coreFadeOut",-10000,10000);
+  }
+
+  void setup() {
+    super.setup();
+  }
+
+  void draw() {
+    float percentage = durationPercentage();
+    fill(100,100,100,percentage);
+    noStroke();
+    rect(0,0,width, height);
+  }
 }
