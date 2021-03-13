@@ -3,6 +3,11 @@
   (c) Jan den Besten
  */
 
+boolean doAnalyze = false;
+float smoothingFactorUp = 0.8;
+float smoothingFactorDown = 0.1;
+
+
 // Audio
 import ddf.minim.analysis.*;
 import ddf.minim.*;
@@ -12,10 +17,6 @@ FFT         fft;
 BeatDetect  beat;
 AudioAnalyzer analyzer;
 
-float smoothingFactorUp = 0.8;
-float smoothingFactorDown = 0.1;
-
-
 
 void drawDebugBar() {
   int barHeight = 50;
@@ -24,10 +25,19 @@ void drawDebugBar() {
   rect(0,0,width,barHeight);
   fill(0,255,0);
   textSize(12);
-  text( audioFile + " - " + timeFormat(player.position()) + " / " + timeFormat(player.length()), 10, barHeight/2 );
+  text( audioFile + " - " + timeFormat(timePlayed()) + " / " + timeFormat(player.length()), 10, barHeight/2 );
+
+  // Scenes
+  String activeScenes = "Scenes: ";
+  for( int s=0; s<nrOfScenes; s++) {
+    if (scenes[s].isActive()) {
+      activeScenes += scenes[s].name +"["+percentageFormat(scenes[s].durationPercentage())+"]" + ", ";
+    }
+  }
+  text( activeScenes, width/3, barHeight/2 );
 
   if (analyzer.isNormalizing()) {
-    text( "ANALYZING", width/2, barHeight/2 );
+    text( "ANALYZING", width*2/3, barHeight/2 );
   }
 
   // draw a line to show where in the song playback is currently located
@@ -68,6 +78,15 @@ void keyPressed()
   }
 }
 
+int timePlayed() {
+  return player.position();
+}
+
+int timeLeft() {
+  return player.length() - player.position();
+}
+
+
 String timeFormat(int millis) {
   int seconds = millis / 1000;
   int minutes = seconds / 60;
@@ -90,31 +109,38 @@ String intFormat(int value, int length, String ch) {
   return format + value;
 }
 
+String percentageFormat(float value) {
+  return intFormat(int(value),2,"0") + "%";
+}
 
 
 
-void outTro() {
-  PFont font;
-  font = createFont("Lucida Sans Unicode.ttf", 70, true);
+void coreIntro() {
+  Scene scene = findSceneByName("coreIntro");
   textFont(font);
   textAlign(CENTER);
-  int sceneTime = outTroTime - (player.length() - player.position());
-  float opacity = float(sceneTime) / float(outTroTime) * 100;
-  fill(220,220,220, opacity);
+  float opacity = 100 - scene.durationPercentage();
+  fill(110,110,110, opacity);
   text( "Music: Zaagstof", width/2, height/2 - 100);
   text( "Visuals: Jan den Besten", width/2, height/2 + 100 );
 }
 
-boolean fadeOut() {
-  int sceneTime = millis() - outTroStartTime;
-  if (sceneTime > fadeOutTime) {
-    return true;
-  }
-  float amount = float(sceneTime) / float(fadeOutTime) * 100;
-  fill(100,100,100,amount);
+void coreOutro() {
+  Scene scene = findSceneByName("coreOutro");
+  textFont(font);
+  textAlign(CENTER);
+  float opacity = scene.durationPercentage();
+  fill(110,110,110, opacity);
+  text( "Music: Zaagstof", width/2, height/2 - 100);
+  text( "Visuals: Jan den Besten", width/2, height/2 + 100 );
+}
+
+boolean coreFadeOut() {
+  Scene scene = findSceneByName("coreFadeOut");
+  float percentage = scene.durationPercentage();
+  fill(100,100,100,percentage);
   noStroke();
   rect(0,0,width, height);
-  return false;
 }
 
 // =============
@@ -177,7 +203,6 @@ class AudioAnalyzer {
         if (volumeSpectrum[i] > maxSpectrum[i]) { maxSpectrum[i]=volumeSpectrum[i]; }
         rmsSpectrum[i] += volumeSpectrum[i] * volumeSpectrum[i];
         rmsSamples++;
-        println(rmsSamples);
       }
       else {
         // Factor
@@ -221,27 +246,29 @@ class AudioAnalyzer {
   }
 
   void loadNormalizeData() {
-    File file = dataFile(getNormalizeFilename());
-    isNormalizing = !file.isFile();
-    if (!isNormalizing){
-     Table table;
-     table = loadTable("data/"+getNormalizeFilename(), "header");
-     if ( table.getRowCount() > 0 ) {
-       println(table.getRowCount() + " total rows in table");
+    if (doAnalyze) {
+      File file = dataFile(getNormalizeFilename());
+      isNormalizing = !file.isFile();
+      if (isNormalizing){
+        Table table;
+        table = loadTable("data/"+getNormalizeFilename(), "header");
+        if ( table.getRowCount() > 0 ) {
+          println(table.getRowCount() + " total rows in table");
 
-       for (TableRow row : table.rows()) {
-         int band = row.getInt("band");
-         float max = row.getFloat("max");
-         float rms = row.getFloat("rms");
-         rmsSpectrum[band] = rms;
-         maxedFactor[band] = 1/max;
-         normalizedFactor[band] = 1/rms;
-         // println("Band ",band," => ",max,rmsSpectrum[band],normalizedFactor[band],maxedFactor[band]);
-       }
-     }
-    }
-    else {
-      println("No normalize data => Analyzing now...");
+          for (TableRow row : table.rows()) {
+            int band = row.getInt("band");
+            float max = row.getFloat("max");
+            float rms = row.getFloat("rms");
+            rmsSpectrum[band] = rms;
+            maxedFactor[band] = 1/max;
+            normalizedFactor[band] = 1/rms;
+            // println("Band ",band," => ",max,rmsSpectrum[band],normalizedFactor[band],maxedFactor[band]);
+          }
+        }
+      }
+      else {
+        println("No normalize data => Analyzing now...");
+      }
     }
   }
 

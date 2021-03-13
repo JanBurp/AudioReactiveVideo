@@ -4,17 +4,13 @@
  */
 
 // Put you're audio file in the 'data' folder and fill in the name:
-String audioFile = "No Worries.wav";
+String audioFile = "No Worries - kort.wav";
 
 // Show debugbar and react to keypresses (LEFT|RIGHT)
 boolean debug = true;
 
-
-// Timing (milliseconds)
-int outTroTime  = 12000;
-int fadeOutTime = 5000;
-//
-int outTroStartTime = -1;
+int nrOfScenes = 4;
+Scene scenes[];
 
 // Objects
 CircleWave ampCircles[];
@@ -22,24 +18,18 @@ CircleWave ampCircles[];
 // int nrOflines = 100;
 // int currentLine = 0;
 
-
-// =========== DON'T CHANGE ANYTHING UNDER THIS LINE (or know what you do) =========== //
-
-// Time
-int startTime = millis();
-
-
+PFont font;
 
 
 /*
-
   SETUP
-
 */
 public void setup() {
   size(1280,720,P2D);
   pixelDensity(2);
+  colorMode(RGB, 255,255,255,100);
   background(220,220,220);
+  font = createFont("Lucida Sans Unicode.ttf", 70, true);
 
   randomSeed(1);
 
@@ -53,6 +43,13 @@ public void setup() {
   beat = new BeatDetect(player.bufferSize(), player.sampleRate());
   beat.setSensitivity(300);
 
+  // Scenes
+  scenes = new Scene[nrOfScenes];
+  scenes[0] = new Scene("coreIntro", 0, 10000);
+  scenes[1] = new Scene("test", 5000, 20000);
+  scenes[2] = new Scene("coreOutro", -20000, 20000);
+  scenes[3] = new Scene("coreFadeOut", -5000, 5000);
+
   // Graphics
   ampCircles = new CircleWave[3];
   ampCircles[0] = new CircleWave(width/4,height/2,height/2,-1);
@@ -63,12 +60,11 @@ public void setup() {
   // for(int i = 0; i < nrOflines; i++) {
   //   lines[i] = new LineWave();
   // }
-
-  startTime = millis();
 }
 
 
 public void draw() {
+  // background(220,220,220);
   analyzer.analyze();
 
   beat.detect(player.mix);
@@ -92,9 +88,11 @@ public void draw() {
   ampCircles[2].draw();
 
 
-  // Time
-  if ( (player.length()-player.position()) <= outTroTime ) {
-    outTro();
+  // Scenes
+  for( int s=0; s<nrOfScenes; s++) {
+    if (scenes[s].isActive()) {
+      scenes[s].draw();
+    }
   }
 
   // DEBUG
@@ -103,16 +101,11 @@ public void draw() {
   }
 
   // END - save fft analyzer & EXIT
-  if ( player.position() >= player.length() ) {
-    if (outTroStartTime<0) {
-      outTroStartTime = millis();
+  if ( player.position() >= player.length()) {
+    if (analyzer.isNormalizing()) {
+      analyzer.saveNormalizeData();
     }
-    if (fadeOut()) {
-      if (analyzer.isNormalizing()) {
-        analyzer.saveNormalizeData();
-      }
-      exit();
-    }
+    exit();
   }
 }
 
