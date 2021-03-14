@@ -3,11 +3,10 @@ CircleWave ampCircles[];
 
 class waveFlowers extends Scene {
   waveFlowers() {
-    super("waveFlowers",15000,-20000);
+    super("waveFlowers",0,0);
   }
 
   void setup() {
-    super.setup();
     ampCircles = new CircleWave[3];
     ampCircles[0] = new CircleWave(width/4,height/2,height/2,-1);
     ampCircles[1] = new CircleWave(width/2,height/2,height/2,0);
@@ -15,6 +14,16 @@ class waveFlowers extends Scene {
   }
 
   void draw() {
+    if (beat.isKick()) {
+      ampCircles[0].move();
+    }
+    if (beat.isHat()) {
+      ampCircles[1].move();
+    }
+    if (beat.isSnare()) {
+      ampCircles[2].move();
+    }
+
     ampCircles[0].draw();
     ampCircles[1].draw();
     ampCircles[2].draw();

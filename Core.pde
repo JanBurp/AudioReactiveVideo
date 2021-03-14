@@ -1,16 +1,22 @@
 /*
-  A tool to create visuals reacting on an audiofile
-  (c) Jan den Besten
+
+  A tool to create visuals reacting on an audiofile (c) Jan den Besten.
+
+  Define your're scenes in Scenes.pde
+
  */
 
-// Settings
+
+// Global settings
 boolean debug = true;
 boolean doAnalyze = false;
 float smoothingFactorUp = 0.8;
 float smoothingFactorDown = 0.1;
 
+// Lucida Font
+PFont font;
 
-// Audio
+// Audio libraries and globals
 import ddf.minim.analysis.*;
 import ddf.minim.*;
 Minim minim;
@@ -20,6 +26,13 @@ BeatDetect  beat;
 AudioAnalyzer analyzer;
 
 
+
+/*
+  Shows a debugbar:
+  - Name and time
+  - Active scenes
+  - Waveform
+ */
 void drawDebugBar() {
   int barHeight = 50;
   noStroke();
@@ -51,6 +64,9 @@ void drawDebugBar() {
   analyzer.drawWaveformsRect(0,0,width,barHeight);
 }
 
+/*
+  When in debugmode, reacts on left and right cursor keys for skipping through audio
+ */
 void keyPressed()
 {
   if (debug) {
@@ -80,15 +96,24 @@ void keyPressed()
   }
 }
 
+
+/*
+  Returns time passed in milliseconds
+ */
 int timePlayed() {
   return player.position();
 }
 
+/*
+  Returns time left in milliseconds
+ */
 int timeLeft() {
   return player.length() - player.position();
 }
 
-
+/*
+  Format milliseconds in a nice string format
+ */
 String timeFormat(int millis) {
   int seconds = millis / 1000;
   int minutes = seconds / 60;
@@ -97,6 +122,9 @@ String timeFormat(int millis) {
   return minutes +":"+ intFormat(seconds,2,"0");// +"."+ intFormat(millis,4,"0");
 }
 
+/*
+  Format a number with a fixed length and prefixed characters (001 instead of 1 for example)
+ */
 String intFormat(int value, int length, String ch) {
   String format = "";
   if (length>3 && value<1000) {
@@ -111,13 +139,134 @@ String intFormat(int value, int length, String ch) {
   return format + value;
 }
 
+/*
+  Format a float (0-100) in a percentage string (45%)
+ */
 String percentageFormat(float value) {
   return intFormat(int(value),2,"0") + "%";
 }
 
 
-// =============
+//  ================== SCENES ======================
 
+
+
+/*
+  Iterates to all scenes and call setup methods
+ */
+void setupScenes() {
+  println();
+  println("==== Initializing. Audio file: `",audioFile,"` length: ",player.length());
+  println();
+
+  for( int s=0; s<scenes.length; s++) {
+    scenes[s].initialize();
+    scenes[s].setup();
+  }
+}
+
+/*
+  Iterates to all scenes, check if a scene is active and call draw method
+ */
+void drawScenes() {
+  for( int s=0; s<scenes.length; s++) {
+    if (scenes[s].isActive()) {
+      scenes[s].draw();
+    }
+  }
+}
+
+/*
+  Scene Class
+
+  User scenes inherit from this class.
+
+ */
+class Scene {
+
+  // A user defined name, for debugging options
+  public String name;
+
+  // Time in milliseconds from start of the audio when the scene starts. A value of 0 is start of audio. Can be negative, in that case the starttime is calculated from the end of the auidio.
+  public int startTime;
+
+  // Duration time in milliseconds of the scene. A value of 0 is calculated and set to a druation from startTime to of audio. StartTime + duration cannot exceed lenght of audio.
+  public int duration;
+
+  /*
+    Constructor
+   */
+  Scene(String name, int startTime, int duration) {
+    this.name       = name;
+    this.startTime  = startTime;
+    this.duration   = duration;
+  }
+
+  /*
+    Initialize method is called once at the start of the script.
+    Calculate startTime and duration (if set zero of negative)
+   */
+  private void initialize() {
+    if (startTime<0) {
+      startTime = player.length() - abs(startTime);
+    }
+    if (duration<=0) {
+      duration = player.length() - abs(duration) - startTime;
+    }
+    println( this.name," - ", this.startTime, ":", this.duration );
+  }
+
+  /*
+    Setup method is called once at the start of the script. Initilize your're scene here.
+   */
+  public void setup() {
+  }
+
+  /*
+    Draw method is called every draw iteration of the sketch. Draw you're scene here.
+   */
+  public void draw() {
+  }
+
+  /*
+    Test if scene is active (needs to be drawn)
+   */
+  public boolean isActive() {
+    if (timePlayed()>=startTime && timePlayed()<startTime+duration) {
+      return true;
+    }
+    return false;
+  }
+
+  /*
+    Returns the duration of the scene (from the start of the scene) in milliseconds.
+   */
+  public int durationMillis() {
+    return timePlayed() - startTime;
+  }
+
+  /*
+    Return the duration of the scene as a percentage of the length of the scene. From 0.0 to 100.0.
+   */
+  public float durationPercentage() {
+    return (float)durationMillis()*100 / (float)duration;
+  }
+
+}
+
+
+
+
+
+/*
+
+  Audio Analyzer Class
+
+  Handles analizing, normalizing and smoothing different audio spectrums.
+  With tools to show waveform and equalizer.
+  Writes normalize data to a file after first run. And uses this data to normalize the audio spectrums for more usefull equalizer visualisations.
+
+ */
 
 class AudioAnalyzer {
 
@@ -295,67 +444,5 @@ class AudioAnalyzer {
         line( x1, y2 + player.right.get(i)*yh, x2, y2 + player.right.get(i+1)*yh );
       }
     }
-
-}
-
-void setupScenes() {
-  for( int s=0; s<scenes.length; s++) {
-    scenes[s].setup();
-  }
-}
-
-void drawScenes() {
-  for( int s=0; s<scenes.length; s++) {
-    if (scenes[s].isActive()) {
-      scenes[s].draw();
-    }
-  }
-}
-
-class Scene {
-
-  String name;
-  int startTime;
-  int duration;
-
-  Scene(String name, int startTime, int duration) {
-    this.name       = name;
-    this.startTime  = startTime;
-    this.duration   = duration;
-  }
-
-  void setup() {
-    if (duration<=0) {
-      duration = player.length() - abs(duration) - startTime;
-    }
-    println( this.name,".setup ", this.startTime, "-", this.duration );
-  }
-
-  void draw() {
-    println(name,".draw()");
-  }
-
-  boolean isActive() {
-    if (startTime>=0 && timePlayed()>=startTime && timePlayed()<startTime+duration) {
-      return true;
-    }
-    if (startTime<0 && timeLeft()<=abs(startTime) && durationMillis()<duration ) {
-      return true;
-    }
-    return false;
-  }
-
-  int durationMillis() {
-    if (startTime>=0) {
-      return timePlayed() - startTime;
-    }
-    else {
-      return abs(startTime) - timeLeft();
-    }
-  }
-
-  float durationPercentage() {
-    return (float)durationMillis()*100 / (float)duration;
-  }
 
 }
