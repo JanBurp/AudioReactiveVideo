@@ -2,11 +2,41 @@
 
   A tool to create visuals reacting on an audiofile (c) Jan den Besten.
 
-  Define your're scenes in Scenes.pde
+  Purpose of .pde files:
+  - This file - Configuration and basic setup
+  - Core.pde - All core classes and methods. Don't touch it.
+  - CoreScenes.pde - Example scenes. You can use them, change them, copy them as you like.
+  - scene###.pde - More (example) scenes, create you're own.
 
  */
 
 
+/* ================ CONFIGURATION ========================== */
+
+/*
+  Put you're audio file (.wav) in the 'data' folder and fill in the name:
+ */
+String audioFile = "No Worries - kort.wav";
+
+
+/*
+  Declare you're scenes here.
+  Best practice is to use a new .pde file for every scene with a name of 'scene####.pde'
+  You can find some examples in CoreScenes.pde
+ */
+Scene scenes[] = {
+  new coreIntro(),
+  new coreWave(),
+  new waveFlowers(),
+  new coreOutro(),
+  new coreFadeOut(),
+};
+
+
+
+/*
+  Global setup method
+ */
 public void setup() {
   // Setup graphics
   size(1280,720,P2D);
@@ -31,6 +61,9 @@ public void setup() {
 }
 
 
+/*
+  Global draw method
+ */
 public void draw() {
   // Reset background
   noStroke();

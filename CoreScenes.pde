@@ -1,29 +1,3 @@
-/*
-
-  Put you're audio file (.wav) in the 'data' folder and fill in the name:
-
- */
-
-String audioFile = "No Worries - kort.wav";
-
-
-/*
-
-  Declare you're scenes here.
-  Best practice is to use a new .pde file for every scene.
-  Some standard scenes are it this file.
-
- */
-
-Scene scenes[] = {
-  new coreIntro(),
-  new coreWave(),
-  new waveFlowers(), // see waveFlowersScene.pde
-  new coreOutro(),
-  new coreFadeOut(),
-};
-
-
 // ========================= Core Example Scenes ============
 
 

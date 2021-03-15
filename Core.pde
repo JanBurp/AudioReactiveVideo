@@ -2,10 +2,7 @@
 
   A tool to create visuals reacting on an audiofile (c) Jan den Besten.
 
-  Define your're scenes in Scenes.pde
-
  */
-
 
 // Global settings
 boolean debug = true;
@@ -24,7 +21,6 @@ AudioPlayer player;
 FFT         fft;
 BeatDetect  beat;
 AudioAnalyzer analyzer;
-
 
 
 /*
