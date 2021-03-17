@@ -16,7 +16,7 @@
 /*
   Put you're audio file (.wav) in the 'data' folder and fill in the name:
  */
-String audioFile = "No Worries - kort.wav";
+String audioFile = "No Worries.wav";
 
 
 /*
@@ -25,9 +25,8 @@ String audioFile = "No Worries - kort.wav";
   You can find some examples in CoreScenes.pde
  */
 Scene scenes[] = {
-  new coreIntro(),
-  new coreWave(),
-  new waveFlowers(),
+  new waveLandscape(),
+  // new waveCircles(),
   new coreOutro(),
   new coreFadeOut(),
 };
@@ -56,7 +55,7 @@ public void setup() {
   beat.setSensitivity(300);
 
   // Setup Scenes
-  randomSeed(1);
+  // randomSeed(1);
   setupScenes();
 }
 
@@ -66,8 +65,9 @@ public void setup() {
  */
 public void draw() {
   // Reset background
+  // background(220,220,220);
   noStroke();
-  fill(220,220,220,1);
+  fill(220,220,220,.5);
   rect(0,0,width,height);
 
   // Analyze audio

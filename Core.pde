@@ -5,7 +5,7 @@
  */
 
 // Global settings
-boolean debug = true;
+boolean debug = false;
 boolean doAnalyze = false;
 float smoothingFactorUp = 0.8;
 float smoothingFactorDown = 0.1;
@@ -53,6 +53,7 @@ void drawDebugBar() {
 
   // draw a line to show where in the song playback is currently located
   float posx = map(player.position(), 0, player.length(), 0, width);
+  strokeWeight(1);
   stroke(255,0,0);
   line(posx, 0, posx, barHeight-1);
   stroke(255,255,255);
@@ -421,6 +422,7 @@ class AudioAnalyzer {
       {
         noFill();
         stroke(0,0,0);
+        strokeWeight(1);
         rect( i*bandwidth, 0, bandwidth, height);
 
         fill(255,0,0);

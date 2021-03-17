@@ -2,6 +2,8 @@
 Processing (https://processing.org/) code for creating visuals that react to audio.
 The goal is simple: create automatic visuals while feeding the code with music.
 
+You can see examples on the YouTube playlist of 'Zaagstof': https://www.youtube.com/playlist?list=PLRnF3ON_bf27HfI0NtnziLUvLfZki-_H4
+
 ## How to
 - Download and install processing (https://processing.org/)
 - Open and run the .pde file
@@ -13,9 +15,9 @@ So i'm developing this processing code to make visuals for me. Starting simple a
 
 ## Different releases
 With the musical project 'Zaagstof', a dutch impro collective, we publish roughly once in two weeks a track on YouTube. With each new track i'm coding a new version of this processing sketch. Each version more exciting visuals. And in the meantime have a nice goal for diving into processing and sound analyses.
-You can see examples on the YouTube playlist of 'Zaagstof': https://www.youtube.com/playlist?list=PLRnF3ON_bf27HfI0NtnziLUvLfZki-_H4
 
 ### Releases
+- v3.1.0 - Wave Landscape - Again a big rewrite, Scenes!
 - v3.0.0 - Pollock Machine - Total rewrite, using mimin library, more analyses and preparing for scenes and more
 - v2.4.0 - Journey into shapes
 - v2.3.0 - Airy Shapes v2
