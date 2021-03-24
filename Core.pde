@@ -21,6 +21,7 @@ AudioPlayer player;
 FFT         fft;
 BeatDetect  beat;
 AudioAnalyzer analyzer;
+boolean isPlaying = false;
 
 
 /*
@@ -61,6 +62,13 @@ void drawDebugBar() {
   analyzer.drawWaveformsRect(0,0,width,barHeight);
 }
 
+void drawPauseButton() {
+  textFont(font);
+  textAlign(CENTER);
+  fill(110,110,110);
+  text( "press SPACEBAR to start", width/2, height/2 );
+}
+
 /*
   When in debugmode, reacts on left and right cursor keys for skipping through audio
  */
@@ -89,6 +97,14 @@ void keyPressed()
           player.play();
         }
       }
+    }
+  }
+  if (startWithPauzeButton && !isPlaying) {
+    if (key==' ') {
+      startWithPauzeButton = false;
+      resetBackground(true);
+      player.play();
+      isPlaying = true;
     }
   }
 }

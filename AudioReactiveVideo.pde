@@ -16,7 +16,15 @@
 /*
   Put you're audio file (.wav) in the 'data' folder and fill in the name:
  */
-String audioFile = "No Worries.wav";
+String audioFile = "test_loop.wav";
+
+
+/*
+  If this is true, the sketch will start with a pauze button. Pressing SPACEBAR will start audio and the sketch.
+  Handy when making a screenrecording.
+ */
+boolean startWithPauzeButton = false;
+
 
 
 /*
@@ -41,13 +49,16 @@ public void setup() {
   size(1280,720,P2D);
   pixelDensity(2);
   colorMode(RGB, 255,255,255,100);
-  background(220,220,220);
+  resetBackground(true);
   font = createFont("Lucida Sans Unicode.ttf", 70, true);
 
   // Start Audio
   minim = new Minim(this);
   player = minim.loadFile( audioFile );
-  player.play();
+  if (!startWithPauzeButton && !isPlaying) {
+    player.play();
+    isPlaying = true;
+  }
 
   // Start Analyzer
   analyzer = new AudioAnalyzer();
@@ -59,34 +70,54 @@ public void setup() {
   setupScenes();
 }
 
+void resetBackground(boolean reset) {
+  if (reset) {
+    background(220,220,220);
+  }
+  else {
+    noStroke();
+    fill(220,220,220,.5);
+    rect(0,0,width,height);
+  }
+}
+
 
 /*
   Global draw method
  */
 public void draw() {
-  // Reset background
-  // background(220,220,220);
-  noStroke();
-  fill(220,220,220,.5);
-  rect(0,0,width,height);
-
-  // Analyze audio
-  analyzer.analyze();
-  beat.detect(player.mix);
-
-  // Draw the active scenes
-  drawScenes();
-
-  // Debugbar?
-  if (debug) {
-    drawDebugBar();
+  if (startWithPauzeButton && !isPlaying) {
+    drawPauseButton();
   }
+  else {
 
-  // End of audio? -> save fft analyzer & EXIT
-  if ( player.position() >= player.length()) {
-    if (analyzer.isNormalizing()) {
-      analyzer.saveNormalizeData();
+    if (!isPlaying) {
+      resetBackground(true);
+      player.play();
+      isPlaying = true;
     }
-    exit();
+
+    // Reset background
+    resetBackground(false);
+
+    // Analyze audio
+    analyzer.analyze();
+    beat.detect(player.mix);
+
+    // Draw the active scenes
+    drawScenes();
+
+    // Debugbar?
+    if (debug) {
+      drawDebugBar();
+    }
+
+    // End of audio? -> save fft analyzer & EXIT
+    if ( player.position() >= player.length()) {
+      if (analyzer.isNormalizing()) {
+        analyzer.saveNormalizeData();
+      }
+      exit();
+    }
   }
 }
