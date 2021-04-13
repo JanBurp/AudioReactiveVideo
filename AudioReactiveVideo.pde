@@ -33,11 +33,16 @@ boolean startWithPauzeButton = false;
   You can find some examples in CoreScenes.pde
  */
 Scene scenes[] = {
-  new waveLandscape(),
-  // new waveCircles(),
+  new waveLandscapeTrigger(),
   new coreOutro(),
   new coreFadeOut(),
 };
+
+
+
+
+int backgroundRedraw = 4;
+int backgroundTimer = 0;
 
 
 
@@ -50,6 +55,7 @@ public void setup() {
   pixelDensity(2);
   colorMode(RGB, 255,255,255,100);
   resetBackground(true);
+  backgroundTimer = backgroundRedraw;
   font = createFont("Lucida Sans Unicode.ttf", 70, true);
 
   // Start Audio
@@ -72,12 +78,16 @@ public void setup() {
 
 void resetBackground(boolean reset) {
   if (reset) {
-    background(220,220,220);
+    background(0,0,0);
   }
   else {
-    noStroke();
-    fill(220,220,220,.5);
-    rect(0,0,width,height);
+    backgroundTimer = backgroundTimer - 1;
+    if (backgroundTimer<=1) {
+      noStroke();
+      fill(0,0,0,1);
+      rect(0,0,width,height);
+      backgroundTimer = backgroundRedraw;
+    }
   }
 }
 

@@ -56,7 +56,7 @@ class coreWave extends Scene {
  */
 class coreOutro extends Scene {
   coreOutro() {
-    super("coreOutro",-10000,0);
+    super("coreOutro",-9000,0);
   }
 
   void draw() {
@@ -66,7 +66,7 @@ class coreOutro extends Scene {
     if (opacity>100) {
       opacity = 100 - opacity/2;
     }
-    fill(196,196,196, opacity);
+    fill(128,128,128, opacity);
     text( "Music: Zaagstof", width/2, height/2 - 100);
     text( "Visuals: Jan den Besten", width/2, height/2 + 100 );
   }
@@ -78,12 +78,12 @@ class coreOutro extends Scene {
  */
 class coreFadeOut extends Scene {
   coreFadeOut() {
-    super("coreFadeOut",-7000,0);
+    super("coreFadeOut",-5000,0);
   }
 
   void draw() {
     float percentage = map2(durationPercentage(), 0,100,0,100, EXPONENTIAL, EASE_IN_OUT);
-    fill(100,100,100,percentage);
+    fill(128,128,128,percentage);
     noStroke();
     rect(0,0,width, height);
   }
