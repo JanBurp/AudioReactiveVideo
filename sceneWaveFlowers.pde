@@ -93,15 +93,15 @@ class CircleWave {
 
     if (leftOrRight<0) {
       stroke(110,55,55,20);
-      fill(220,0,0,7);
+      fill(220,0,0,15);
     }
     if (leftOrRight==0) {
       stroke(110,110,55,20);
-      fill(220,220,0,7);
+      fill(220,220,0,15);
     }
     if (leftOrRight>0) {
       stroke(55,55,110,20);
-      fill(0,0,220,7);
+      fill(0,0,220,15);
     }
     beginShape();
     for(int i = 0; i < steps; i++) {

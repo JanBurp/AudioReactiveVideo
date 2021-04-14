@@ -75,12 +75,9 @@ class waveLandscapeTrigger extends Scene {
       float green = green(c);
       float blue = blue(c);
       float alpha = 2 + 100*level;
-      if (timePlayed()<1000) {
-        alpha = alpha * timePlayed()/1000;
-      }
       color currentColor = color(red,green,blue,alpha);
       stroke(currentColor);
-      strokeWeight(1 + 2*level);
+      strokeWeight(1 + level);
 
       int size = player.bufferSize();
       for(int i = 0; i < size - 1; i++)
@@ -120,10 +117,10 @@ class waveLandscapeTrigger extends Scene {
         position.add(speed);
       }
 
-      if (position.x > width*1.25 || position.x < 0-width*0.25 ) {
+      if (position.x > width*1.1 || position.x < 0-width*0.1 ) {
         speed.x = - speed.x;
       }
-      if (position.y > height*1.25 || position.y < 0-height*0.25 ) {
+      if (position.y > height*1.1 || position.y < 0-height*0.1 ) {
         speed.y = - speed.y;
       }
     }

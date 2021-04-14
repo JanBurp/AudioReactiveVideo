@@ -6,8 +6,8 @@ You can see examples on the YouTube playlist of 'Zaagstof': https://www.youtube.
 
 ## How to
 - Download and install processing (https://processing.org/)
-- Open and run the .pde file
-- If you want to use other music, just add the file to the data folder and edit the appropriate lines at the top of the .pde file
+- Open and run the AudioReactiveVideo.pde file
+- If you want to use other music, just add the file to the data folder and edit the appropriate lines at the top of the AudioReactiveVideo.pde file
 
 ## Some background
 As a musician i'd like to publish music online with some visuals. But i don't want to loose a lot of time creating and editing video material. Here comes my developer's mind... 
@@ -17,6 +17,7 @@ So i'm developing this processing code to make visuals for me. Starting simple a
 With the musical project 'Zaagstof', a dutch impro collective, we publish roughly once in two weeks a track on YouTube. With each new track i'm coding a new version of this processing sketch. Each version more exciting visuals. And in the meantime have a nice goal for diving into processing and sound analyses.
 
 ### Releases
+- v3.2.0 - Mixed Landscape - A small but nice new feature: mixing scenes and a small refacturing of calling them
 - v3.1.1 - Another Wave Landscape
 - v3.1.0 - Wave Landscape - Again a big rewrite, Scenes!
 - v3.0.0 - Pollock Machine - Total rewrite, using mimin library, more analyses and preparing for scenes and more
