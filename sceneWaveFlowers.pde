@@ -2,8 +2,8 @@ CircleWave ampCircles[];
 
 
 class waveFlowers extends Scene {
-  waveFlowers() {
-    super("waveFlowers",0,0);
+  waveFlowers(SceneTime[] times) {
+    super("waveFlowers",times);
   }
 
   void setup() {
@@ -14,14 +14,16 @@ class waveFlowers extends Scene {
   }
 
   void draw() {
-    if (beat.isKick()) {
-      ampCircles[0].move();
-    }
-    if (beat.isHat()) {
-      ampCircles[1].move();
-    }
-    if (beat.isSnare()) {
-      ampCircles[2].move();
+    if (player.mix.level() > .06) {
+      if (beat.isKick()) {
+        ampCircles[0].move();
+      }
+      if (beat.isHat()) {
+        ampCircles[1].move();
+      }
+      if (beat.isSnare()) {
+        ampCircles[2].move();
+      }
     }
 
     ampCircles[0].draw();

@@ -32,10 +32,16 @@ boolean startWithPauzeButton = false;
   Best practice is to use a new .pde file for every scene with a name of 'scene####.pde'
   You can find some examples in CoreScenes.pde
  */
+
+SceneTime start = new SceneTime(0,65000);     // 0:00 - 1:05
+SceneTime wild = new SceneTime(64700,105000); // 1:05 - 2:49
+SceneTime obscure = new SceneTime(169500,0);  // 2:50 - ...
+
 Scene scenes[] = {
-  new waveLandscapeTrigger(),
-  new coreOutro(),
-  new coreFadeOut(),
+  new waveFlowers( new SceneTime[]{ start, obscure }),
+  new waveLandscapeTrigger( new SceneTime[]{ wild }),
+  new coreOutro( new SceneTime[]{new  SceneTime(-16000,0)} ),
+  new coreFadeOut( new SceneTime[]{new  SceneTime(-8000,0)} ),
 };
 
 

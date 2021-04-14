@@ -2,8 +2,8 @@ CircleWaveRound circles[];
 
 
 class waveCircles extends Scene {
-  waveCircles() {
-    super("waveCircles",0,0);
+  waveCircles(SceneTime[] times) {
+    super("waveCircles",times);
   }
 
   void setup() {

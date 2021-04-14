@@ -4,8 +4,8 @@ class waveLandscapeTrigger extends Scene {
 
   Wave waves[];
 
-  waveLandscapeTrigger() {
-    super("waveLandscapeTrigger",0,0);
+  waveLandscapeTrigger(SceneTime[] times) {
+    super("waveLandscapeTrigger",times);
   }
 
   void setup() {

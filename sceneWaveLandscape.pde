@@ -4,8 +4,8 @@ class waveLandscape extends Scene {
 
   Wave waves[];
 
-  waveLandscape() {
-    super("waveLandscape",0,0);
+  waveLandscape(SceneTime[] times) {
+    super("waveLandscape",times);
   }
 
   void setup() {

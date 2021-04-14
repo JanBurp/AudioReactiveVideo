@@ -189,6 +189,31 @@ void drawScenes() {
   }
 }
 
+
+/*
+
+  SceneTime Class
+
+  A type to define the active range of a scene
+
+ */
+
+class SceneTime {
+
+  // Time in milliseconds from start of the audio when the scene starts. A value of 0 is start of audio. Can be negative, in that case the starttime is calculated from the end of the auidio.
+  public int start;
+
+  // Duration time in milliseconds of the scene. A value of 0 is calculated and set to a druation from startTime to of audio. StartTime + duration cannot exceed lenght of audio.
+  public int duration;
+
+  SceneTime(int start, int duration) {
+    this.start = start;
+    this.duration = duration;
+  }
+
+}
+
+
 /*
   Scene Class
 
@@ -200,19 +225,16 @@ class Scene {
   // A user defined name, for debugging options
   public String name;
 
-  // Time in milliseconds from start of the audio when the scene starts. A value of 0 is start of audio. Can be negative, in that case the starttime is calculated from the end of the auidio.
-  public int startTime;
-
-  // Duration time in milliseconds of the scene. A value of 0 is calculated and set to a druation from startTime to of audio. StartTime + duration cannot exceed lenght of audio.
-  public int duration;
+  private SceneTime[] times;
+  private int activeTime = 0;
+  private boolean activated = false;
 
   /*
     Constructor
    */
-  Scene(String name, int startTime, int duration) {
-    this.name       = name;
-    this.startTime  = startTime;
-    this.duration   = duration;
+  Scene(String name, SceneTime[] times) {
+    this.name  = name;
+    this.times  = times;
   }
 
   /*
@@ -220,13 +242,16 @@ class Scene {
     Calculate startTime and duration (if set zero of negative)
    */
   private void initialize() {
-    if (startTime<0) {
-      startTime = player.length() - abs(startTime);
+    for(int t=0; t<times.length; t++) {
+      SceneTime time = times[t];
+      if (time.start<0) {
+        time.start = player.length() - abs(time.start);
+      }
+      if (time.duration<=0) {
+        time.duration = player.length() - abs(time.duration) - time.start;
+      }
+      println( this.name, ".", t ," - ", time.start, ":", time.duration );
     }
-    if (duration<=0) {
-      duration = player.length() - abs(duration) - startTime;
-    }
-    println( this.name," - ", this.startTime, ":", this.duration );
   }
 
   /*
@@ -245,8 +270,15 @@ class Scene {
     Test if scene is active (needs to be drawn)
    */
   public boolean isActive() {
-    if (timePlayed()>=startTime && timePlayed()<startTime+duration) {
-      return true;
+    if (activeTime<times.length) {
+      if (timePlayed()>=times[activeTime].start && timePlayed()<(times[activeTime].start+times[activeTime].duration) ) {
+        activated = true;
+        return true;
+      }
+    }
+    if (activated) {
+      activated = false;
+      activeTime++;
     }
     return false;
   }
@@ -255,14 +287,14 @@ class Scene {
     Returns the duration of the scene (from the start of the scene) in milliseconds.
    */
   public int durationMillis() {
-    return timePlayed() - startTime;
+    return timePlayed() - times[activeTime].start;
   }
 
   /*
     Return the duration of the scene as a percentage of the length of the scene. From 0.0 to 100.0.
    */
   public float durationPercentage() {
-    return (float)durationMillis()*100 / (float)duration;
+    return (float)durationMillis()*100 / (float)times[activeTime].duration;
   }
 
 }

@@ -5,8 +5,8 @@
   Example scene for showing an intro text and fading out
  */
 class coreIntro extends Scene {
-  coreIntro() {
-    super("coreIntro",0,10000); // Active first 10 seconds
+  coreIntro(SceneTime[] times) {
+    super("coreIntro",times); // Active first 10 seconds
   }
 
   void draw() {
@@ -26,8 +26,8 @@ class coreWave extends Scene {
 
   int x,w,y,h;
 
-  coreWave() {
-    super("coreWave",0,0); // Active all the time
+  coreWave(SceneTime[] times) {
+    super("coreWave",times); // Active all the time
   }
 
   void setup() {
@@ -55,8 +55,8 @@ class coreWave extends Scene {
   Example scene for showing an outro text and fading in
  */
 class coreOutro extends Scene {
-  coreOutro() {
-    super("coreOutro",-9000,0);
+  coreOutro(SceneTime[] times) {
+    super("coreOutro",times);
   }
 
   void draw() {
@@ -77,8 +77,8 @@ class coreOutro extends Scene {
   Example scene for a simple fade out at the end
  */
 class coreFadeOut extends Scene {
-  coreFadeOut() {
-    super("coreFadeOut",-5000,0);
+  coreFadeOut(SceneTime[] times) {
+    super("coreFadeOut",times);
   }
 
   void draw() {
