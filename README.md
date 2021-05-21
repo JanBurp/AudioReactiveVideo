@@ -17,6 +17,7 @@ So i'm developing this processing code to make visuals for me. Starting simple a
 With the musical project 'Zaagstof', a dutch impro collective, we publish roughly once in two weeks a track on YouTube. With each new track i'm coding a new version of this processing sketch. Each version more exciting visuals. And in the meantime have a nice goal for diving into processing and sound analyses.
 
 ### Releases
+- v3.2.1 - Katharsis
 - v3.2.0 - Mixed Landscape - A small but nice new feature: mixing scenes and a small refacturing of calling them
 - v3.1.1 - Another Wave Landscape
 - v3.1.0 - Wave Landscape - Again a big rewrite, Scenes!

@@ -16,14 +16,14 @@
 /*
   Put you're audio file (.wav) in the 'data' folder and fill in the name:
  */
-String audioFile = "Katharsis.wav";
+String audioFile = "test_loop.wav";
 
 
 /*
   If this is true, the sketch will start with a pauze button. Pressing SPACEBAR will start audio and the sketch.
   Handy when making a screenrecording.
  */
-boolean startWithPauzeButton = true;
+boolean startWithPauzeButton = false;
 
 
 
