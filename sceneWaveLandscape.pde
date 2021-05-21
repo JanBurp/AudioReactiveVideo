@@ -9,15 +9,15 @@ class waveLandscape extends Scene {
   }
 
   void setup() {
-    waves = new Wave[7];
+    waves = new Wave[1];
     int size = width;
-    waves[0] = new Wave( size, color(128,0,128) );
-    waves[1] = new Wave( size, color(0,128,128) );
-    waves[2] = new Wave( size, color(64,64,128) );
-    waves[3] = new Wave( size, color(0,128,0) );
-    waves[4] = new Wave( size, color(255,255,0) );
-    waves[5] = new Wave( size, color(128,0,0) );
-    waves[6] = new Wave( size, color(255,255,255) );
+    // waves[0] = new Wave( size, color(128,0,128) );
+    // waves[1] = new Wave( size, color(0,128,128) );
+    // waves[2] = new Wave( size, color(64,64,128) );
+    // waves[3] = new Wave( size, color(0,128,0) );
+    // waves[4] = new Wave( size, color(255,255,0) );
+    // waves[5] = new Wave( size, color(128,0,0) );
+    waves[0] = new Wave( size, color(255,255,255) );
   }
 
   void draw() {

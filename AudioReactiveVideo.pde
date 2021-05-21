@@ -16,14 +16,14 @@
 /*
   Put you're audio file (.wav) in the 'data' folder and fill in the name:
  */
-String audioFile = "test_loop.wav";
+String audioFile = "Katharsis.wav";
 
 
 /*
   If this is true, the sketch will start with a pauze button. Pressing SPACEBAR will start audio and the sketch.
   Handy when making a screenrecording.
  */
-boolean startWithPauzeButton = false;
+boolean startWithPauzeButton = true;
 
 
 
@@ -33,21 +33,22 @@ boolean startWithPauzeButton = false;
   You can find some examples in CoreScenes.pde
  */
 
-SceneTime start = new SceneTime(0,65000);     // 0:00 - 1:05
-SceneTime wild = new SceneTime(64700,105000); // 1:05 - 2:49
-SceneTime obscure = new SceneTime(169500,0);  // 2:50 - ...
+SceneTime completeLength = new SceneTime(0,0);     // 0:00 -
+// SceneTime wild = new SceneTime(110000,185000);     // 1:50 - 3:05
 
 Scene scenes[] = {
-  new waveFlowers( new SceneTime[]{ start, obscure }),
-  new waveLandscapeTrigger( new SceneTime[]{ wild }),
-  new coreOutro( new SceneTime[]{new  SceneTime(-16000,0)} ),
-  new coreFadeOut( new SceneTime[]{new  SceneTime(-8000,0)} ),
+  new waveGrid( new SceneTime[]{ completeLength }),
+  new gridCopy( new SceneTime[]{ completeLength }),
+  // new waveLandscape( new SceneTime[]{ start }),
+
+  new coreOutro( new SceneTime[]{new  SceneTime(-10000,0)} ),
+  new coreFadeOut( new SceneTime[]{new  SceneTime(-5000,0)} ),
 };
 
 
 
 
-int backgroundRedraw = 4;
+int backgroundRedraw = 20;
 int backgroundTimer = 0;
 
 
