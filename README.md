@@ -4,8 +4,6 @@ The goal is simple: create automatic visuals while feeding the code with music.
 
 You can see examples on the YouTube playlist of 'Zaagstof': https://www.youtube.com/playlist?list=PLRnF3ON_bf27HfI0NtnziLUvLfZki-_H4
 
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/vWFbAr4iG-8?si=bYYlM4CABZ84PDO-" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-
 ## How to
 - Download and install processing (https://processing.org/)
 - Open and run the AudioReactiveVideo.pde file
